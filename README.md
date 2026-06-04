@@ -2,7 +2,9 @@
 
 Monitor fisico de uso de Claude en tiempo real. Un ESP32 con pantalla LCD que muestra tu consumo de Claude (limites de 5 horas, 7 dias y extra usage) consultando la API interna de claude.ai a traves de un proxy local.
 
-![Waveshare ESP32-S3 LCD 1.47"](https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/e/s/esp32-s3-lcd-1.47-1.jpg)
+<a href="https://www.waveshare.com/esp32-s3-lcd-1.47b.html">
+  <img src="https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/e/s/esp32-s3-lcd-1.47b-1.jpg" alt="Waveshare ESP32-S3 LCD 1.47 B" width="300">
+</a>
 
 ## Como funciona
 
@@ -23,8 +25,8 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ├── .env                         # Config (puertos)
 ├── proxy/
 │   └── server.js                # Proxy Node.js (Playwright + Express)
-├── clawdmeter_app.html          # Dashboard web
-├── clawdmeter_console.js        # Script para DevTools del browser
+├── clawdmeter_app.html          # Dashboard web (alternativa al ESP32, abre en cualquier browser)
+├── clawdmeter_console.js        # Script para pegar en DevTools — consulta usage sin proxy
 └── firmware/Clawdmeter/
     ├── Clawdmeter.ino           # Main (setup, loop, globals)
     ├── config.ino               # Configuracion (NVS)
