@@ -55,7 +55,7 @@ trap cleanup INT TERM
 if [ ! -d "$SCRIPT_DIR/proxy/node_modules" ]; then
   echo "Instalando dependencias..."
   cd "$SCRIPT_DIR/proxy"
-  npm install --registry https://registry.npmjs.org
+  pnpm install
   cd "$SCRIPT_DIR"
 fi
 
