@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.2.0] - 2026-06-05
+
+### Changed
+- Proxy refactorizado en modulos `lib/browser.js` (Brave/CDP, fetch a claude.ai) y `lib/usage.js` (cache y refresh)
+- `server.js` reducido a entry point con rutas Express
+- Gestor de paquetes cambiado de npm a pnpm (`pnpm-lock.yaml`, `start.sh`, README)
+
+### Removed
+- `package-lock.json` (reemplazado por pnpm)
+
 ## [2.1.0] - 2026-06-05
 
 ### Added

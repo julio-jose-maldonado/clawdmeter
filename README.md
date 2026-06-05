@@ -31,7 +31,10 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ├── start.sh                     # Arranca Brave + proxy
 ├── .env                         # Config (puertos)
 ├── proxy/
-│   ├── server.js                # Proxy Node.js (Playwright + Express)
+│   ├── server.js                # Entry point (Express + rutas)
+│   ├── lib/
+│   │   ├── browser.js           # Conexion Brave/CDP, fetch a claude.ai
+│   │   └── usage.js             # Cache y refresh de datos de uso
 │   └── public/                  # PWA (widget de escritorio)
 │       ├── index.html           # Dashboard web instalable
 │       ├── manifest.json        # Manifest PWA
@@ -64,7 +67,7 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ./start.sh
 ```
 
-Requiere: Node.js, Brave Browser, Playwright (`npm install` se ejecuta automaticamente).
+Requiere: Node.js, pnpm, Brave Browser, Playwright (`pnpm install` se ejecuta automaticamente).
 
 ### PWA (Widget de escritorio)
 
