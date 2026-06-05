@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const express = require('express');
+const path = require('path');
 
 const PORT = parseInt(process.env.PROXY_PORT || '3456');
 const CDP_PORT = process.env.CDP_PORT || '9222';
@@ -78,6 +79,7 @@ async function refreshData() {
 
 const app = express();
 app.use((_, res, next) => { res.header('Access-Control-Allow-Origin', '*'); next(); });
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/usage', async (req, res) => {
   try {
@@ -95,11 +97,19 @@ app.get('/health', (_, res) => {
   res.json({ status: 'ok', hasData: !!cachedUsage, lastFetch });
 });
 
+app.get('/api/debug/{*path}', async (req, res) => {
+  try {
+    const data = await fetchFromClaude(req.params.path);
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 (async () => {
   await initBrowser();
   await refreshData();
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\nClawdmeter proxy en http://localhost:${PORT}/api/usage\n`);
+    console.log(`\nClawdmeter proxy en http://localhost:${PORT}/api/usage`);
+    console.log(`Clawdmeter app en http://localhost:${PORT}/\n`);
   });
 })();
 

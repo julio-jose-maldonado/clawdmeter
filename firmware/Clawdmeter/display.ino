@@ -40,15 +40,30 @@ void drawRateSection(int x, int y, int w, const char* label, float pct, const ch
 void drawScreen() {
   spr.fillSprite(COL_BG);
 
+  char buf[32];
+
   // Header
   spr.fillRect(0, 0, SCREEN_W, HEADER_H, COL_DARKGRAY);
   spr.setTextColor(COL_CYAN, COL_DARKGRAY);
   spr.setTextDatum(ML_DATUM);
-  spr.drawString("CLAWDMETER", 8, HEADER_H / 2, 2);
+  if (dataValid && usage.plan[0] && strcmp(usage.plan, "?") != 0) {
+    const char* label = usage.plan;
+    if (strncmp(label, "default_", 8) == 0) label += 8;
+    if (strncmp(label, "claude_", 7) == 0)  label += 7;
+    char clean[32];
+    strlcpy(clean, label, sizeof(clean));
+    for (int i = 0; clean[i]; i++) {
+      if (clean[i] == '_') clean[i] = ' ';
+    }
+    if (clean[0] >= 'a' && clean[0] <= 'z') clean[0] -= 32;
+    snprintf(buf, sizeof(buf), "CLAWDMETER - %s", clean);
+    spr.drawString(buf, 8, HEADER_H / 2, 2);
+  } else {
+    spr.drawString("CLAWDMETER", 8, HEADER_H / 2, 2);
+  }
 
   spr.setTextColor(COL_CYAN, COL_DARKGRAY);
   spr.setTextDatum(MR_DATUM);
-  char buf[32];
   struct tm tm;
   getLocalTime(&tm);
   snprintf(buf, sizeof(buf), "%02d:%02d", tm.tm_hour, tm.tm_min);
@@ -124,6 +139,18 @@ void drawScreen() {
   spr.setTextDatum(ML_DATUM);
   snprintf(buf, sizeof(buf), "WiFi %ddBm", rssi);
   spr.drawString(buf, 8, footerY + FOOTER_H / 2, 1);
+
+  uint16_t updColor = COL_WHITE;
+  if (lastSuccessMillis > 0) {
+    unsigned long elapsed = millis() - lastSuccessMillis;
+    unsigned long cycle = (unsigned long)config.refresh_sec * 1000;
+    if (elapsed > cycle * 3) updColor = COL_RED;
+    else if (elapsed > cycle * 2) updColor = COL_YELLOW;
+  }
+  spr.setTextColor(updColor, COL_DARKGRAY);
+  spr.setTextDatum(MC_DATUM);
+  snprintf(buf, sizeof(buf), "Upd %s", lastSuccess);
+  spr.drawString(buf, SCREEN_W / 2, footerY + FOOTER_H / 2, 1);
 
   spr.setTextColor(COL_GREEN, COL_DARKGRAY);
   spr.setTextDatum(MR_DATUM);

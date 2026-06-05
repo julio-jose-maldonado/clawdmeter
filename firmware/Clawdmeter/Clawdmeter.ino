@@ -86,8 +86,10 @@ WebServer webServer(80);
 WiFiManager wm;
 
 unsigned long lastRefresh = 0;
+unsigned long lastSuccessMillis = 0;
 bool dataValid = false;
 char lastError[48] = "";
+char lastSuccess[9] = "--:--";
 UsageData usage;
 
 // ---- SETUP ----
@@ -131,8 +133,11 @@ void loop() {
   webServer.handleClient();
 
   if (millis() - lastRefresh >= (unsigned long)config.refresh_sec * 1000) {
-    dataValid = fetchUsage();
-    if (dataValid) updateRgbLed(usage.five_hour_pct);
+    bool ok = fetchUsage();
+    if (ok) {
+      dataValid = true;
+      updateRgbLed(usage.five_hour_pct);
+    }
     drawScreen();
     lastRefresh = millis();
   }
@@ -140,7 +145,13 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi lost, reconnecting...");
     WiFi.reconnect();
-    delay(5000);
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 10000) {
+      delay(100);
+    }
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("WiFi reconnect failed, will retry next loop");
+    }
   }
 
   delay(10);

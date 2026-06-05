@@ -35,13 +35,24 @@ void handleRoot() {
   html += "</style></head><body><div class='c'>";
 
   html += "<h1>CLAWDMETER</h1>";
-  html += "<div class='sub'>v2.0 &mdash; Claude Usage Monitor</div>";
+  const char* planRaw = usage.plan;
+  if (strncmp(planRaw, "default_", 8) == 0) planRaw += 8;
+  if (strncmp(planRaw, "claude_", 7) == 0)  planRaw += 7;
+  String planClean = String(planRaw);
+  planClean.replace('_', ' ');
+  if (planClean.length() > 0 && planClean[0] >= 'a' && planClean[0] <= 'z') planClean[0] -= 32;
+  if (dataValid && usage.plan[0] && strcmp(usage.plan, "?") != 0) {
+    html += "<div class='sub'>v2.0 &mdash; " + planClean + "</div>";
+  } else {
+    html += "<div class='sub'>v2.0 &mdash; Claude Usage Monitor</div>";
+  }
 
   // Status
   html += "<div class='status'>";
   html += "IP: " + WiFi.localIP().toString() + " &bull; ";
   html += "WiFi: " + String(WiFi.RSSI()) + "dBm &bull; ";
   html += dataValid ? "<span style='color:#00cc44'>Online</span>" : "<span style='color:#ff3333'>Offline</span>";
+  html += "<br>Upd: " + String(lastSuccess);
   html += "</div>";
 
   // Proxy settings
@@ -109,6 +120,9 @@ void handleRoot() {
   html += "<form method='GET' action='/reset-wifi' onsubmit='return confirm(\"Borrar WiFi y reiniciar?\")'>";
   html += "<button type='submit' class='btn-danger'>Resetear WiFi</button></form>";
   html += "<div class='help' style='text-align:center;margin-top:4px'>Borra las credenciales WiFi guardadas y reinicia en modo AP</div>";
+
+  html += "<div style='text-align:center;margin-top:24px;padding:14px;border-top:1px solid var(--accent);color:var(--accent);font-size:.8rem;letter-spacing:1px'>";
+  html += "CLAWDMETER v2.0 &mdash; Claude Usage Monitor</div>";
 
   html += "</div></body></html>";
 
