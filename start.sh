@@ -88,6 +88,8 @@ else
     --user-data-dir="$CHROME_DATA" \
     --no-first-run \
     --disable-extensions \
+    --disable-backgrounding-occluded-windows \
+    --disable-renderer-backgrounding \
     2>/dev/null &
   sleep 15
 

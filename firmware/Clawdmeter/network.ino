@@ -96,27 +96,39 @@ bool fetchUsage() {
   char url[128];
   snprintf(url, sizeof(url), "http://%s:%d/api/usage", config.proxy_ip, config.proxy_port);
 
-  HTTPClient http;
-  http.begin(url);
-  http.setTimeout(10000);
-  int httpCode = http.GET();
+  const int MAX_RETRIES = 3;
+  String payload;
 
-  if (httpCode <= 0) {
-    snprintf(lastError, sizeof(lastError), "Proxy no responde (%s:%d)", config.proxy_ip, config.proxy_port);
-    Serial.printf("HTTP error: %d\n", httpCode);
+  for (int attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      Serial.printf("Retry %d/%d...\n", attempt + 1, MAX_RETRIES);
+      delay(1000);
+    }
+
+    HTTPClient http;
+    http.begin(url);
+    http.setTimeout(10000);
+    int httpCode = http.GET();
+
+    if (httpCode == 200) {
+      payload = http.getString();
+      http.end();
+      lastError[0] = '\0';
+      goto parse;
+    }
+
+    if (httpCode <= 0) {
+      snprintf(lastError, sizeof(lastError), "Proxy no responde (%s:%d)", config.proxy_ip, config.proxy_port);
+      Serial.printf("HTTP error: %d (attempt %d)\n", httpCode, attempt + 1);
+    } else {
+      snprintf(lastError, sizeof(lastError), "Proxy error HTTP %d", httpCode);
+      Serial.printf("HTTP %d (attempt %d)\n", httpCode, attempt + 1);
+    }
     http.end();
-    return false;
   }
+  return false;
 
-  if (httpCode != 200) {
-    snprintf(lastError, sizeof(lastError), "Proxy error HTTP %d", httpCode);
-    Serial.printf("HTTP error: %d\n", httpCode);
-    http.end();
-    return false;
-  }
-
-  String payload = http.getString();
-  http.end();
+parse:
 
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, payload);
@@ -144,6 +156,12 @@ bool fetchUsage() {
     usage.extra_limit = extra["monthly_limit"] | 0.0f;
   } else {
     usage.extra_pct = -1;
+  }
+
+  lastSuccessMillis = millis();
+  struct tm now;
+  if (getLocalTime(&now)) {
+    snprintf(lastSuccess, sizeof(lastSuccess), "%02d:%02d:%02d", now.tm_hour, now.tm_min, now.tm_sec);
   }
 
   Serial.printf("Data OK — 5h: %.0f%% | 7d: %.0f%% | extra: %.1f%%\n",
