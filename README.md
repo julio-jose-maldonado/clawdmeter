@@ -1,11 +1,15 @@
 # Clawdmeter
 
-Monitor fisico de uso de Claude en tiempo real. Un ESP32 con pantalla LCD que muestra tu consumo de Claude (limites de 5 horas, 7 dias y extra usage) consultando la API interna de claude.ai a traves de un proxy local.
+Monitor fisico de uso de Claude en tiempo real. Un ESP32 con pantalla LCD que muestra tu consumo de Claude (limites de 5 horas, 7 dias y extra usage) consultando la API interna de claude.ai a traves de un proxy local. Incluye una PWA instalable como widget de escritorio.
 
 <p align="center">
   <a href="https://www.waveshare.com/esp32-s3-lcd-1.47b.html">
     <img src="https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/e/s/esp32-s3-lcd-1.47b-1.jpg" alt="Waveshare ESP32-S3 LCD 1.47 B" width="300">
   </a>
+</p>
+
+<p align="center">
+  <img src="docs/pwa-screenshot.png" alt="Clawdmeter PWA" width="400">
 </p>
 
 ## Como funciona
@@ -16,6 +20,7 @@ Brave Browser (perfil dedicado, CDP)
   -> fetch a claude.ai/api (usa cookies del browser, sin API keys)
   -> Express server en localhost:3456
   -> ESP32 lee /api/usage cada 60s
+  -> PWA lee /api/usage cada 60s
 ```
 
 No usa API keys ni session keys. La autenticacion vive en el perfil del browser — te logueas una vez y listo.
@@ -26,15 +31,18 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ├── start.sh                     # Arranca Brave + proxy
 ├── .env                         # Config (puertos)
 ├── proxy/
-│   └── server.js                # Proxy Node.js (Playwright + Express)
-├── clawdmeter_app.html          # Dashboard web (alternativa al ESP32, abre en cualquier browser)
-├── clawdmeter_console.js        # Script para pegar en DevTools — consulta usage sin proxy
+│   ├── server.js                # Proxy Node.js (Playwright + Express)
+│   └── public/                  # PWA (widget de escritorio)
+│       ├── index.html           # Dashboard web instalable
+│       ├── manifest.json        # Manifest PWA
+│       ├── icon.svg             # Icono de la app
+│       └── sw.js                # Service worker
 └── firmware/Clawdmeter/
     ├── Clawdmeter.ino           # Main (setup, loop, globals)
     ├── config.ino               # Configuracion (NVS)
     ├── colors.ino               # Backlight, gradiente RGB, LED
     ├── display.ino              # Pantalla TFT (UI completa)
-    ├── network.ino              # WiFi, NTP, fetch de datos
+    ├── network.ino              # WiFi, NTP, fetch de datos con reintentos
     └── webconfig.ino            # Web server de configuracion
 ```
 
@@ -58,6 +66,14 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 
 Requiere: Node.js, Brave Browser, Playwright (`npm install` se ejecuta automaticamente).
 
+### PWA (Widget de escritorio)
+
+1. Con el proxy corriendo, abrir `http://localhost:3456/` en Chrome
+2. Click en el icono de instalar en la barra de URL
+3. Se abre como ventana standalone — un widget sin barra del browser
+
+Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico segun el uso.
+
 ### ESP32 (Arduino IDE)
 
 1. Board: ESP32S3 Dev Module, 16MB Flash, OPI PSRAM, USB CDC On Boot Enabled
@@ -74,6 +90,8 @@ Requiere: Node.js, Brave Browser, Playwright (`npm install` se ejecuta automatic
 | 5 HORAS | Uso en la ventana de 5h + tiempo para reset |
 | 7 DIAS | Uso en la ventana de 7 dias + tiempo para reset |
 | EXTRA USAGE | Creditos gastados / limite mensual (en USD) |
+| Plan | Tipo de suscripcion (Max 5x, Pro, etc.) |
+| Upd | Ultima actualizacion exitosa (cambia a rojo si falla) |
 | LED RGB | Verde (0%) a rojo (100%) segun uso de 5h |
 
 ## Configuracion del ESP32
