@@ -27,6 +27,7 @@
 // ---- HARDWARE ----
 const int LCD_BL_PIN = 46;
 const int RGB_LED_PIN = 38;
+const int TOUCH_BTN_PIN = 10;  // TTP223: VCC->3V3, GND->GND, IO->GPIO10 (activo alto)
 
 // ---- COLORES (RGB565) ----
 #define COL_BG       0x0000
@@ -63,6 +64,10 @@ struct Config {
   bool flip_screen;
   char timezone[48];
   char admin_pass[32];
+  float lat;
+  float lon;
+  char city[40];
+  uint16_t home_timeout_sec;
 };
 
 struct UsageData {
@@ -76,6 +81,18 @@ struct UsageData {
   char  org_name[32];
   char  plan[32];
 };
+
+struct WeatherInfo {
+  float temp;
+  float feels;
+  int   humidity;
+  float wind;
+  int   code;
+  bool  is_day;
+};
+
+// ---- PANTALLAS ----
+enum { SCREEN_USAGE = 0, SCREEN_CLOCK, SCREEN_WEATHER, NUM_SCREENS };
 
 // ---- GLOBALS ----
 Config config;
@@ -92,6 +109,13 @@ char lastError[48] = "";
 char lastSuccess[9] = "--:--";
 UsageData usage;
 
+int currentScreen = SCREEN_USAGE;
+unsigned long lastTouchMillis = 0;
+WeatherInfo weather;
+bool weatherValid = false;
+unsigned long lastWeatherFetch = 0;
+const unsigned long WEATHER_TTL_MS = 15UL * 60UL * 1000UL;
+
 // ---- SETUP ----
 void setup() {
   Serial.begin(115200);
@@ -99,6 +123,7 @@ void setup() {
 
   tft.init();
   loadConfig();
+  pinMode(TOUCH_BTN_PIN, INPUT);
   tft.setRotation(config.flip_screen ? 3 : 1);
   tft.fillScreen(COL_BG);
   initBacklight();
@@ -131,6 +156,7 @@ void setup() {
 // ---- LOOP ----
 void loop() {
   webServer.handleClient();
+  handleTouchButton();
 
   if (millis() - lastRefresh >= (unsigned long)config.refresh_sec * 1000) {
     bool ok = fetchUsage();
@@ -141,6 +167,9 @@ void loop() {
     drawScreen();
     lastRefresh = millis();
   }
+
+  refreshWeatherIfDue();
+  tickClockRedraw();
 
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi lost, reconnecting...");

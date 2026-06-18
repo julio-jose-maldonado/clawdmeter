@@ -8,6 +8,10 @@ void loadConfig() {
   config.flip_screen = prefs.getBool("flip", false);
   strlcpy(config.timezone, prefs.getString("timezone", "ART3").c_str(), sizeof(config.timezone));
   strlcpy(config.admin_pass, prefs.getString("admin_pass", "clawdmeter").c_str(), sizeof(config.admin_pass));
+  config.lat = prefs.getFloat("lat", 0.0f);
+  config.lon = prefs.getFloat("lon", 0.0f);
+  strlcpy(config.city, prefs.getString("city", "").c_str(), sizeof(config.city));
+  config.home_timeout_sec = prefs.getUShort("home_timeout", 5);
   prefs.end();
 }
 
@@ -21,5 +25,9 @@ void saveConfig() {
   prefs.putBool("flip", config.flip_screen);
   prefs.putString("timezone", config.timezone);
   prefs.putString("admin_pass", config.admin_pass);
+  prefs.putFloat("lat", config.lat);
+  prefs.putFloat("lon", config.lon);
+  prefs.putString("city", config.city);
+  prefs.putUShort("home_timeout", config.home_timeout_sec);
   prefs.end();
 }

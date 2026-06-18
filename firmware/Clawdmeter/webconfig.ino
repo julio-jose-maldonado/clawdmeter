@@ -9,7 +9,7 @@ bool checkAuth() {
 void handleRoot() {
   if (!checkAuth()) return;
   String html;
-  html.reserve(4096);
+  html.reserve(8192);
 
   html += "<!DOCTYPE html><html><head><meta charset='UTF-8'>";
   html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
@@ -79,6 +79,10 @@ void handleRoot() {
   html += "<span class='range-val'>" + String(config.led_brightness) + "</span></div>";
   html += "<div class='help'>0 = LED apagado</div>";
 
+  html += "<label>Volver a pantalla principal (segundos)</label>";
+  html += "<input type='number' name='home_timeout' value='" + String(config.home_timeout_sec) + "' min='0' max='600'>";
+  html += "<div class='help'>Tras este tiempo sin tocar el boton, vuelve a la pantalla de uso. 0 = nunca</div>";
+
   html += "<label style='margin-top:16px;display:flex;align-items:center;gap:8px;cursor:pointer'>";
   html += "<input type='checkbox' name='flip' value='1' style='width:18px;height:18px;accent-color:var(--accent)' ";
   html += String(config.flip_screen ? "checked" : "") + "> Invertir pantalla (180&deg;)</label>";
@@ -108,6 +112,39 @@ void handleRoot() {
   html += "</select>";
   html += "</div>";
 
+  html += "<div class='panel'><h2>Clima</h2>";
+  html += "<label>Ciudad</label>";
+  html += "<div style='display:flex;gap:8px;align-items:center'>";
+  html += "<input type='text' id='city' name='city' value='" + String(config.city) + "' placeholder='Ej: Buenos Aires'>";
+  html += "<button type='button' onclick='buscarCiudad()' style='width:auto;padding:10px 16px;margin-top:4px;font-size:.9rem'>Buscar</button>";
+  html += "</div>";
+  html += "<div class='help' id='cityres'>Busca la ciudad y completa lat/lon automaticamente (Open-Meteo, sin API key)</div>";
+  html += "<label>Latitud</label>";
+  html += "<input type='text' name='lat' value='" + String(config.lat, 4) + "'>";
+  html += "<label>Longitud</label>";
+  html += "<input type='text' name='lon' value='" + String(config.lon, 4) + "'>";
+  html += "<div class='help'>Tambien se pueden cargar a mano. Ambos en 0 = pantalla de clima desactivada.</div>";
+  html += "</div>";
+
+  html += "<script>";
+  html += "async function buscarCiudad(){";
+  html += "const q=document.getElementById('city').value.trim();";
+  html += "const res=document.getElementById('cityres');";
+  html += "if(!q){res.textContent='Escribi una ciudad primero';return;}";
+  html += "res.textContent='Buscando...';";
+  html += "try{";
+  html += "const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=1&language=es');";
+  html += "const j=await r.json();";
+  html += "if(!j.results||!j.results.length){res.textContent='Ciudad no encontrada';return;}";
+  html += "const c=j.results[0];";
+  html += "document.querySelector('input[name=lat]').value=c.latitude;";
+  html += "document.querySelector('input[name=lon]').value=c.longitude;";
+  html += "document.getElementById('city').value=c.name;";
+  html += "res.textContent=c.name+(c.admin1?', '+c.admin1:'')+(c.country?', '+c.country:'')+' — lat/lon completados, guarda para aplicar';";
+  html += "}catch(e){res.textContent='Error: '+e.message;}";
+  html += "}";
+  html += "</script>";
+
   html += "<div class='panel'><h2>Seguridad</h2>";
   html += "<label>Contrase&ntilde;a de admin</label>";
   html += "<input type='text' name='admin_pass' value='" + String(config.admin_pass) + "'>";
@@ -134,6 +171,7 @@ void handleSave() {
   if (webServer.hasArg("proxy_ip"))    strlcpy(config.proxy_ip, webServer.arg("proxy_ip").c_str(), sizeof(config.proxy_ip));
   if (webServer.hasArg("proxy_port"))  config.proxy_port = webServer.arg("proxy_port").toInt();
   if (webServer.hasArg("refresh_sec")) config.refresh_sec = constrain(webServer.arg("refresh_sec").toInt(), 10, 600);
+  if (webServer.hasArg("home_timeout")) config.home_timeout_sec = constrain(webServer.arg("home_timeout").toInt(), 0, 600);
   if (webServer.hasArg("led_bright"))  config.led_brightness = webServer.arg("led_bright").toInt();
   if (webServer.hasArg("lcd_bright")) {
     config.lcd_brightness = webServer.arg("lcd_bright").toInt();
@@ -153,6 +191,19 @@ void handleSave() {
 
   if (webServer.hasArg("admin_pass") && webServer.arg("admin_pass").length() > 0) {
     strlcpy(config.admin_pass, webServer.arg("admin_pass").c_str(), sizeof(config.admin_pass));
+  }
+
+  if (webServer.hasArg("city")) strlcpy(config.city, webServer.arg("city").c_str(), sizeof(config.city));
+
+  if (webServer.hasArg("lat") && webServer.hasArg("lon")) {
+    float newLat = webServer.arg("lat").toFloat();
+    float newLon = webServer.arg("lon").toFloat();
+    if (newLat != config.lat || newLon != config.lon) {
+      config.lat = newLat;
+      config.lon = newLon;
+      weatherValid = false;
+      lastWeatherFetch = 0;  // fuerza refetch con las nuevas coordenadas
+    }
   }
 
   saveConfig();
