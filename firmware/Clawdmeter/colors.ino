@@ -25,6 +25,13 @@ uint16_t barColor(float pct) {
   return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
 }
 
+uint16_t tempColor(float t) {
+  if (t < 10)  return COL_CYAN;
+  if (t < 25)  return COL_GREEN;
+  if (t < 32)  return COL_AMBER;
+  return COL_RED;
+}
+
 void updateRgbLed(float pct) {
   uint8_t r, g, b;
   pctToRGB(pct, r, g, b);
