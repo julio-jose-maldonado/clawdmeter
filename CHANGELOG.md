@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.4.0] - 2026-06-20
+
+### Added
+- Tira externa de 3 WS2812B (GPIO2, Adafruit NeoPixel): un LED por metrica con gradiente verde a rojo — 5h, 7 dias y extra usage (`updateUsageLeds` en `colors.ino`)
+- LED indicador azul tenue cuando no hay plan de extra usage
+- Efecto ambiental en el LED integrado (GPIO38): transicion fluida entre tonos aleatorios via HSV (`tickAmbientLed`)
+- Diagrama de conexiones y tabla de pines en el README
+
+### Changed
+- El LED integrado pasa de mostrar el uso de 5h a ser decorativo (ambiental); el uso ahora se refleja en la tira externa
+- `updateRgbLed(pct)` reemplazado por `updateUsageLeds()` en `setup`, `loop` y web config
+
+## [2.3.0] - 2026-06-20
+
+### Added
+- Multipantalla: vista de uso + vista de reloj y clima, alternables con boton touch TTP223 (GPIO10)
+
 ## [2.2.0] - 2026-06-05
 
 ### Changed

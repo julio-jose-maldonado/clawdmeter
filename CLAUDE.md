@@ -17,7 +17,7 @@ Clawdmeter: a physical Claude usage monitor. An ESP32 with LCD display (plus an 
 - Requires `.env` (copy from `.env.example`): `PROXY_PORT` (default 3456), `CDP_PORT` (default 9222).
 - There are no tests or linters configured.
 - To run the proxy alone (Brave must already be running with CDP): `cd proxy && node server.js`.
-- Firmware is built/flashed from Arduino IDE (no CLI build). Board: ESP32S3 Dev Module, 16MB Flash, OPI PSRAM, USB CDC On Boot Enabled. Libraries: TFT_eSPI (needs `User_Setup.h` configured for the Waveshare ESP32-S3 LCD 1.47" B), ArduinoJson, WiFiManager (tzapu).
+- Firmware is built/flashed from Arduino IDE (no CLI build). Board: ESP32S3 Dev Module, 16MB Flash, OPI PSRAM, USB CDC On Boot Enabled. Libraries: TFT_eSPI (needs `User_Setup.h` configured for the Waveshare ESP32-S3 LCD 1.47" B), ArduinoJson, WiFiManager (tzapu), Adafruit NeoPixel.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ Arduino IDE concatenates all `.ino` files in the folder into one compilation uni
 
 - Config persists in NVS via `Preferences`; runtime configuration via a web UI served by the ESP32 at `http://clawdmeter.local` (mDNS).
 - Display is a 320x172 landscape ST7789 driven through a full-screen `TFT_eSprite` (draw to sprite, push once — avoids flicker).
-- WS2812 RGB LED shows a green→red gradient based on 5-hour usage.
+- LEDs (`colors.ino`): the onboard WS2812 (GPIO38) runs a smooth random ambient color cycle (`tickAmbientLed`); an external chain of 3 WS2812B (Adafruit NeoPixel on `EXT_LED_PIN`, default GPIO2) shows green→red gradients for the three usage metrics — 5-hour, 7-day, extra (`updateUsageLeds`). The external strip needs 5V power and common ground.
 
 ## Conventions
 
