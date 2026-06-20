@@ -4,3 +4,9 @@ venv/
 *.pyc
 __pycache__/
 .DS_Store
+
+# Arduino: artefactos de compilacion (Export Compiled Binary)
+firmware/**/build/
+*.bin
+*.hex
+*.elf
