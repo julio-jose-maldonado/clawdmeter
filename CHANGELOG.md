@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.7.0] - 2026-06-21
+
+### Added
+- Comprobacion de inicio (`startupSelfTest` en `alerts.ino`): al bootear, barrido de los 3 LEDs externos con el tono propio de cada alerta (grave=5h, medio=7d, agudo=extra) para verificar tira + buzzer. Suena si hay buzzer configurado, sin importar si las alertas estan activadas
+
 ## [2.6.0] - 2026-06-21
 
 ### Added

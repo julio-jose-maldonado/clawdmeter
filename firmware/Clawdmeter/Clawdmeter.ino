@@ -151,6 +151,8 @@ void setup() {
   extLeds.clear();
   extLeds.show();
 
+  startupSelfTest();  // comprobacion de inicio: recorre las 3 alertas (LED + tono)
+
   spr.createSprite(320, 172);
   spr.setSwapBytes(true);
 
