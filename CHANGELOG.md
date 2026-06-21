@@ -4,6 +4,17 @@
 
 ### Fixed
 - Al guardar en la web config, la pantalla se redibuja al instante (`drawScreen()` en `handleSave`). Antes, invertir la pantalla 180° no se veia hasta el siguiente refresco (parecia no funcionar)
+## [2.5.0] - 2026-06-21
+
+### Added
+- Alertas por umbral de uso (`alerts.ino`): beep en buzzer pasivo + parpadeo del LED de la metrica cuando el uso de 5h, 7 dias o extra cruza el umbral de aviso (def. 80%) o critico (def. 95%)
+- Tono distinto por metrica (grave=5h, medio=7d, agudo=extra) para reconocerla de oido; severidad por cantidad de beeps (1=aviso, 2=critico)
+- Buzzer pasivo (PWM/`tone`) con pin configurable desde la web UI (def. GPIO11); pin `0` = solo parpadeo, sin sonido
+- Panel "Alertas" en la web config: on/off, umbrales de aviso/critico y GPIO del buzzer, con validacion de pin seguro (`buzzerPinValid`)
+- Persistencia en NVS de `buzzer_pin`, `alerts_en`, `warn_thr`, `crit_thr`
+
+### Changed
+- La alerta suena una sola vez por cruce (no repite en cada refresh) y se rearma cuando el uso baja del umbral; el primer arranque fija la linea base sin sonar
 
 ## [2.4.0] - 2026-06-20
 

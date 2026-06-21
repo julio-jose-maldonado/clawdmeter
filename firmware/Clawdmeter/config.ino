@@ -12,6 +12,10 @@ void loadConfig() {
   config.lon = prefs.getFloat("lon", 0.0f);
   strlcpy(config.city, prefs.getString("city", "").c_str(), sizeof(config.city));
   config.home_timeout_sec = prefs.getUShort("home_timeout", 5);
+  config.buzzer_pin = prefs.getUChar("buzzer_pin", BUZZER_PIN_DEFAULT);
+  config.alerts_enabled = prefs.getBool("alerts_en", true);
+  config.warn_threshold = prefs.getUChar("warn_thr", 80);
+  config.crit_threshold = prefs.getUChar("crit_thr", 95);
   prefs.end();
 }
 
@@ -29,5 +33,9 @@ void saveConfig() {
   prefs.putFloat("lon", config.lon);
   prefs.putString("city", config.city);
   prefs.putUShort("home_timeout", config.home_timeout_sec);
+  prefs.putUChar("buzzer_pin", config.buzzer_pin);
+  prefs.putBool("alerts_en", config.alerts_enabled);
+  prefs.putUChar("warn_thr", config.warn_threshold);
+  prefs.putUChar("crit_thr", config.crit_threshold);
   prefs.end();
 }
