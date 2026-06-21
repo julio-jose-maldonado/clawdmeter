@@ -1,9 +1,18 @@
 # Changelog
 
+## [2.6.0] - 2026-06-21
+
+### Added
+- Toque largo (~1s) en el boton touch gira la pantalla 180° y lo guarda en NVS (`toggleFlip` en `touch.ino`); el toque corto sigue cambiando de pantalla
+
+### Changed
+- `handleTouchButton` distingue toque corto (cambia pantalla, al soltar) de toque largo (flip), con debounce de 50ms
+
 ## [2.4.1] - 2026-06-21
 
 ### Fixed
 - Al guardar en la web config, la pantalla se redibuja al instante (`drawScreen()` en `handleSave`). Antes, invertir la pantalla 180° no se veia hasta el siguiente refresco (parecia no funcionar)
+
 ## [2.5.0] - 2026-06-21
 
 ### Added
