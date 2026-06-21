@@ -142,6 +142,7 @@ Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico seg
 | Tira LED | 3 LEDs verde (0%) a rojo (100%): 5h, 7 dias y extra (azul tenue si no aplica) |
 | LED integrado | Color ambiental que cambia suavemente (decorativo) |
 | Buzzer | Beep + parpadeo al cruzar umbral de aviso (~80%) o critico (~95%) en 5h, 7 dias y extra. Tono distinto por metrica (grave/medio/agudo), 1 beep=aviso, 2=critico |
+| Inicio | Self-test al bootear: barrido de los 3 LEDs con el tono de cada alerta (verifica tira + buzzer) |
 
 ## Configuracion del ESP32
 

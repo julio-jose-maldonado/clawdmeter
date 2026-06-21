@@ -60,6 +60,27 @@ void fireAlert(uint8_t level, uint8_t ledIdx, uint16_t freq) {
   extLeds.show();
 }
 
+// Comprobacion de inicio: barrido de los 3 LEDs, cada uno con el tono de su
+// alerta (grave=5h, medio=7d, agudo=extra). Verifica tira + buzzer en cada boot.
+// Suena si hay buzzer configurado (independiente de alerts_enabled).
+void startupSelfTest() {
+  const uint16_t freqs[EXT_LED_COUNT] = {FREQ_5H, FREQ_7D, FREQ_EXTRA};
+  for (uint8_t i = 0; i < EXT_LED_COUNT; i++) {
+    extLeds.setPixelColor(i, extLeds.Color(255, 255, 255));
+    extLeds.show();
+    if (config.buzzer_pin) {
+      tone(config.buzzer_pin, freqs[i], 150);
+      delay(150);
+      noTone(config.buzzer_pin);
+    } else {
+      delay(150);
+    }
+    extLeds.setPixelColor(i, 0);
+    extLeds.show();
+    delay(80);
+  }
+}
+
 // Fija la linea base sin sonar (uso ya presente en el primer arranque).
 void initAlertBaseline() {
   lastLevel5h = alertLevel(usage.five_hour_pct);
