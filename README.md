@@ -58,7 +58,7 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 - **Display:** ST7789, 172x320px (landscape)
 - **LED integrado:** WS2812 (GPIO38) — efecto ambiental con cambio fluido de color
 - **Tira externa:** 3x WS2812B encadenados (GPIO2) — un LED por metrica (5h / 7 dias / extra), gradiente verde a rojo segun uso
-- **Boton touch:** TTP223 (GPIO10) — cambia de pantalla (uso / reloj+clima)
+- **Boton touch:** TTP223 (GPIO10) — toque corto: cambia de pantalla (uso / reloj+clima); toque largo (~1s): gira la pantalla 180°
 - **Buzzer (opcional):** pasivo (GPIO11 por defecto, configurable) — beep al cruzar umbrales de uso
 
 ### Conexiones
