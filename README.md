@@ -30,6 +30,8 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ```
 ├── start.sh                     # Arranca Brave + proxy
 ├── .env                         # Config (puertos)
+├── scripts/
+│   └── install-autostart.sh     # Auto-arranque del proxy (LaunchAgent macOS)
 ├── proxy/
 │   ├── server.js                # Entry point (Express + rutas)
 │   ├── lib/
@@ -112,6 +114,29 @@ El boton touch, la tira de LEDs externa y el buzzer son los componentes a cablea
 ```
 
 Requiere: Node.js, pnpm, Brave Browser, Playwright (`pnpm install` se ejecuta automaticamente).
+
+#### Auto-arranque (opcional, macOS)
+
+Para que el proxy arranque solo al iniciar sesion (asi el ESP32 nunca se queda sin datos tras reiniciar la Mac):
+
+```bash
+# Una vez, despues de haber hecho ./start.sh --login al menos una vez
+./scripts/install-autostart.sh
+
+# Para quitarlo
+./scripts/install-autostart.sh --uninstall
+```
+
+Instala un LaunchAgent (`~/Library/LaunchAgents/com.clawdmeter.proxy.plist`) que corre `start.sh` al login y reintenta si el proxy se cae. Logs en `~/Library/Logs/clawdmeter.log`.
+
+> **Importante (macOS):** el proyecto debe estar **fuera** de `Documents`, `Desktop` y `Downloads` (carpetas protegidas por privacidad/TCC). Si no, el LaunchAgent falla con `Operation not permitted`. Ubicalo por ejemplo en `~/clawdmeter`.
+
+> **Si expira la sesion de claude.ai:** el proxy no podra traer datos y el agente reintentara cada 60s sin exito (se ve en el log). Hay que rehacer el login una vez:
+> ```bash
+> ./scripts/install-autostart.sh --uninstall   # frena el agente
+> ./start.sh --login                            # te logueas de nuevo
+> ./scripts/install-autostart.sh                # lo reinstalas
+> ```
 
 ### PWA (Widget de escritorio)
 
