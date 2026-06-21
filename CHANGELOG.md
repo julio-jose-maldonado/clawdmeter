@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.8.0] - 2026-06-21
+
+### Added
+- Atenuacion nocturna de la pantalla (`tickNightDim` / `applyBacklight` en `colors.ino`): en el rango horario configurado (hora local NTP) baja el brillo de la LCD a un nivel reducido, y lo restaura de dia
+- Campos en la web config (panel Display): activar atenuacion, rango horario (de/a) y brillo nocturno; persistidos en NVS
+
+### Changed
+- El brillo de la LCD pasa a aplicarse via `applyBacklight()` (decide dia/noche), tambien al guardar en la web config
+
 ## [2.7.0] - 2026-06-21
 
 ### Added

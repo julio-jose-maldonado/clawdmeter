@@ -153,6 +153,7 @@ Acceder a `http://clawdmeter.local` desde cualquier dispositivo en la misma red:
 - Brillo LCD y LED
 - Invertir pantalla 180°
 - Zona horaria
+- Atenuacion nocturna: rango horario + brillo reducido de la LCD
 - Alertas: on/off, umbrales de aviso/critico y GPIO del buzzer
 - Password de admin
 

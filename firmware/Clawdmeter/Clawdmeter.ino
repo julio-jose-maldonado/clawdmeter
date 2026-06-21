@@ -85,6 +85,10 @@ struct Config {
   bool    alerts_enabled;
   uint8_t warn_threshold;   // % de uso para alerta de aviso
   uint8_t crit_threshold;   // % de uso para alerta critica
+  bool    night_dim_enabled;
+  uint8_t night_start_hour; // hora (0-23) en que empieza la atenuacion
+  uint8_t night_end_hour;   // hora (0-23) en que termina
+  uint8_t night_brightness; // brillo LCD durante la noche
 };
 
 struct UsageData {
@@ -200,6 +204,7 @@ void loop() {
   refreshWeatherIfDue();
   tickClockRedraw();
   tickAmbientLed();
+  tickNightDim();
 
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi lost, reconnecting...");
