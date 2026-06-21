@@ -235,6 +235,7 @@ void handleSave() {
   saveConfig();
 
   if (dataValid) updateUsageLeds();
+  drawScreen();  // redibuja al instante para aplicar cambios visibles (flip, etc.)
 
   webServer.sendHeader("Location", "/", true);
   webServer.send(302, "text/plain", "Saved. Redirecting...");

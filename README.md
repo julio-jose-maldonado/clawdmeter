@@ -67,32 +67,23 @@ El boton touch, la tira de LEDs externa y el buzzer son los componentes a cablea
 
 ```
         Waveshare ESP32-S3 LCD 1.47" B
-        +------------------------------+
-        |                              |
-        |   [ LCD ST7789 320x172 ]     |
-        |                              |
-        |  GPIO38 WS2812 (integrado)   |  <- ambiental, no se cablea
-        |                              |
-        |  VBUS   GND   GPIO2  GPIO10  |  (VBUS = 5V; en la placa dice VBUS)
-        +----|------|------|------|----+
-             |      |      |      |
-             |      |      |      +-----------------------+
-             |      |      |                              |
-             |      |      |                        +-----------+
-             |      |      |     TTP223 (touch)     |  VCC  3V3 |  (a 3V3 de la placa)
-             |      |      |                        |  GND  GND |
-             |      |      |                        |  I/O  GPIO10
-             |      |      |                        +-----------+
-             |      |      |
-             |      |      |   Tira 3x WS2812B (VBUS/5V, GND comun con la placa)
-             |      |      |   +--------+   +--------+   +--------+
-             |      |      +-->| DIN    |   |        |   |        |
-             |      |          |  LED 0 |DO>| LED 1  |DO>| LED 2  |
-             |      |          | (5h)   |   | (7dias)|   | (extra)|
-             |      |          +--------+   +--------+   +--------+
-             |      |             |  |         |  |         |  |
-             +------|-------------+  | VBUS ---+  | VBUS ---+  |   <- VBUS/5V a cada LED
-                    +----------------+ GND -------+ GND ------+   <- GND comun
+        +------------------------------------+
+        |                                    |
+        |      [ LCD ST7789 320x172 ]        |
+        |                                    |
+        |   WS2812 integrado (GPIO38)        |  <- ambiental, no se cablea
+        |                                    |
+        +--+-----+------+-------+-------+----+   (VBUS = 5V; en la placa dice VBUS)
+         VBUS   GND   GPIO2  GPIO10  GPIO11
+           |     |      |       |       |
+           |     |      |       |       '---> Buzzer pasivo (+), el otro pin a GND
+           |     |      |       '-----------> TTP223 I/O (touch). VCC->3V3, GND->GND
+           |     |      '-------------------> Tira WS2812B DIN (LED0=5h, 1=7d, 2=extra)
+           |     '--------------------------> GND comun (tira + TTP223 + buzzer)
+           '-------------------------------> VBUS/5V (alimenta la tira de LEDs)
+
+   Tira: DIN del LED0 a GPIO2; cada LED encadena DO->DIN al siguiente.
+   Todos los LEDs y el buzzer comparten VBUS/5V (LEDs) y GND con la placa.
 ```
 
 | Senal | Pin placa | Componente |

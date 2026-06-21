@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.4.1] - 2026-06-21
+
+### Fixed
+- Al guardar en la web config, la pantalla se redibuja al instante (`drawScreen()` en `handleSave`). Antes, invertir la pantalla 180° no se veia hasta el siguiente refresco (parecia no funcionar)
 ## [2.5.0] - 2026-06-21
 
 ### Added
