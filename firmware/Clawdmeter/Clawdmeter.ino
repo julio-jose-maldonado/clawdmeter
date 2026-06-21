@@ -38,6 +38,10 @@ const int TOUCH_BTN_PIN = 10;  // TTP223: VCC->3V3, GND->GND, IO->GPIO10 (activo
 #define LED_7D    1
 #define LED_EXTRA 2
 
+// Buzzer pasivo (PWM/tone): alertas sonoras al cruzar umbrales de uso.
+// El pin es configurable desde la web UI; este es solo el valor por defecto.
+#define BUZZER_PIN_DEFAULT 11
+
 // ---- COLORES (RGB565) ----
 #define COL_BG       0x0000
 #define COL_CYAN     0x07FF
@@ -77,6 +81,10 @@ struct Config {
   float lon;
   char city[40];
   uint16_t home_timeout_sec;
+  uint8_t buzzer_pin;       // 0 = buzzer desactivado
+  bool    alerts_enabled;
+  uint8_t warn_threshold;   // % de uso para alerta de aviso
+  uint8_t crit_threshold;   // % de uso para alerta critica
 };
 
 struct UsageData {
@@ -158,7 +166,10 @@ void setup() {
   setupWebServer();
 
   dataValid = fetchUsage();
-  if (dataValid) updateUsageLeds();
+  if (dataValid) {
+    updateUsageLeds();
+    initAlertBaseline();  // fija el nivel actual sin sonar en el arranque
+  }
   drawScreen();
 
   lastRefresh = millis();
@@ -178,6 +189,7 @@ void loop() {
     if (ok) {
       dataValid = true;
       updateUsageLeds();
+      checkAlerts();
     }
     drawScreen();
     lastRefresh = millis();
