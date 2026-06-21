@@ -7,6 +7,35 @@ void setBacklight(uint8_t level) {
   ledcWrite(LCD_BL_PIN, level);
 }
 
+// Devuelve true si la hora local cae en el rango nocturno configurado.
+bool isNightNow() {
+  if (!config.night_dim_enabled) return false;
+  time_t now = time(nullptr);
+  if (now < 1700000000) return false;  // hora aun no sincronizada (NTP)
+  struct tm tm;
+  localtime_r(&now, &tm);
+  int h = tm.tm_hour;
+  int s = config.night_start_hour, e = config.night_end_hour;
+  if (s == e) return false;            // rango nulo
+  if (s < e)  return (h >= s && h < e);
+  return (h >= s || h < e);            // cruza medianoche
+}
+
+// Aplica el brillo segun horario: normal de dia, atenuado de noche.
+// Es idempotente (se puede llamar seguido sin problema).
+void applyBacklight() {
+  setBacklight(isNightNow() ? config.night_brightness : config.lcd_brightness);
+}
+
+// Revisa cada 10s si corresponde cambiar de brillo dia/noche.
+void tickNightDim() {
+  if (!config.night_dim_enabled) return;
+  static unsigned long last = 0;
+  if (millis() - last < 10000) return;
+  last = millis();
+  applyBacklight();
+}
+
 void pctToRGB(float pct, uint8_t &r, uint8_t &g, uint8_t &b) {
   pct = constrain(pct, 0, 100);
   if (pct <= 50) {

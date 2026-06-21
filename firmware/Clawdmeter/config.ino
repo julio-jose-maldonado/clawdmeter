@@ -16,6 +16,10 @@ void loadConfig() {
   config.alerts_enabled = prefs.getBool("alerts_en", true);
   config.warn_threshold = prefs.getUChar("warn_thr", 80);
   config.crit_threshold = prefs.getUChar("crit_thr", 95);
+  config.night_dim_enabled = prefs.getBool("night_en", false);
+  config.night_start_hour = prefs.getUChar("night_start", 23);
+  config.night_end_hour = prefs.getUChar("night_end", 7);
+  config.night_brightness = prefs.getUChar("night_bright", 30);
   prefs.end();
 }
 
@@ -37,5 +41,9 @@ void saveConfig() {
   prefs.putBool("alerts_en", config.alerts_enabled);
   prefs.putUChar("warn_thr", config.warn_threshold);
   prefs.putUChar("crit_thr", config.crit_threshold);
+  prefs.putBool("night_en", config.night_dim_enabled);
+  prefs.putUChar("night_start", config.night_start_hour);
+  prefs.putUChar("night_end", config.night_end_hour);
+  prefs.putUChar("night_bright", config.night_brightness);
   prefs.end();
 }

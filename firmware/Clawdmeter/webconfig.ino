@@ -110,6 +110,20 @@ void handleRoot() {
     html += ">" + String(tzOptions[i][1]) + "</option>";
   }
   html += "</select>";
+
+  html += "<label style='margin-top:16px;display:flex;align-items:center;gap:8px;cursor:pointer'>";
+  html += "<input type='checkbox' name='night_en' value='1' style='width:18px;height:18px;accent-color:var(--accent)' ";
+  html += String(config.night_dim_enabled ? "checked" : "") + "> Atenuar pantalla de noche</label>";
+  html += "<div class='help'>Baja el brillo de la LCD en el rango horario indicado (segun la zona horaria)</div>";
+  html += "<div class='range-row' style='gap:6px'>";
+  html += "<span style='font-size:.85rem'>De</span>";
+  html += "<input type='number' name='night_start' value='" + String(config.night_start_hour) + "' min='0' max='23' style='width:72px'>";
+  html += "<span style='font-size:.85rem'>a</span>";
+  html += "<input type='number' name='night_end' value='" + String(config.night_end_hour) + "' min='0' max='23' style='width:72px'>";
+  html += "<span style='font-size:.85rem'>hs</span></div>";
+  html += "<label>Brillo nocturno</label>";
+  html += "<div class='range-row'><input type='range' name='night_bright' min='5' max='255' value='" + String(config.night_brightness) + "' oninput='this.nextElementSibling.textContent=this.value'>";
+  html += "<span class='range-val'>" + String(config.night_brightness) + "</span></div>";
   html += "</div>";
 
   // Alertas
@@ -190,10 +204,7 @@ void handleSave() {
   if (webServer.hasArg("refresh_sec")) config.refresh_sec = constrain(webServer.arg("refresh_sec").toInt(), 10, 600);
   if (webServer.hasArg("home_timeout")) config.home_timeout_sec = constrain(webServer.arg("home_timeout").toInt(), 0, 600);
   if (webServer.hasArg("led_bright"))  config.led_brightness = webServer.arg("led_bright").toInt();
-  if (webServer.hasArg("lcd_bright")) {
-    config.lcd_brightness = webServer.arg("lcd_bright").toInt();
-    setBacklight(config.lcd_brightness);
-  }
+  if (webServer.hasArg("lcd_bright"))  config.lcd_brightness = webServer.arg("lcd_bright").toInt();
 
   bool newFlip = webServer.hasArg("flip");
   if (newFlip != config.flip_screen) {
@@ -219,6 +230,12 @@ void handleSave() {
     if (buzzerPinValid(p)) config.buzzer_pin = p;  // un pin reservado se ignora
   }
 
+  // Atenuacion nocturna: checkbox solo presente si esta tildado
+  config.night_dim_enabled = webServer.hasArg("night_en");
+  if (webServer.hasArg("night_start")) config.night_start_hour = constrain(webServer.arg("night_start").toInt(), 0, 23);
+  if (webServer.hasArg("night_end"))   config.night_end_hour = constrain(webServer.arg("night_end").toInt(), 0, 23);
+  if (webServer.hasArg("night_bright")) config.night_brightness = constrain(webServer.arg("night_bright").toInt(), 5, 255);
+
   if (webServer.hasArg("city")) strlcpy(config.city, webServer.arg("city").c_str(), sizeof(config.city));
 
   if (webServer.hasArg("lat") && webServer.hasArg("lon")) {
@@ -235,7 +252,8 @@ void handleSave() {
   saveConfig();
 
   if (dataValid) updateUsageLeds();
-  drawScreen();  // redibuja al instante para aplicar cambios visibles (flip, etc.)
+  applyBacklight();  // aplica brillo dia/noche segun config
+  drawScreen();      // redibuja al instante para aplicar cambios visibles (flip, etc.)
 
   webServer.sendHeader("Location", "/", true);
   webServer.send(302, "text/plain", "Saved. Redirecting...");
