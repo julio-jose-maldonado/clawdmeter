@@ -43,7 +43,7 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 └── firmware/Clawdmeter/
     ├── Clawdmeter.ino           # Main (setup, loop, globals)
     ├── config.ino               # Configuracion (NVS)
-    ├── colors.ino               # Backlight, gradiente RGB, LED
+    ├── colors.ino               # Backlight, gradientes, LED integrado + tira externa
     ├── display.ino              # Pantalla TFT (UI completa)
     ├── network.ino              # WiFi, NTP, fetch de datos con reintentos
     └── webconfig.ino            # Web server de configuracion
@@ -53,7 +53,53 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 
 - **Board:** Waveshare ESP32-S3 LCD 1.47" (version B)
 - **Display:** ST7789, 172x320px (landscape)
-- **LED RGB:** WS2812 — gradiente verde a rojo segun uso
+- **LED integrado:** WS2812 (GPIO38) — efecto ambiental con cambio fluido de color
+- **Tira externa:** 3x WS2812B encadenados (GPIO2) — un LED por metrica (5h / 7 dias / extra), gradiente verde a rojo segun uso
+- **Boton touch:** TTP223 (GPIO10) — cambia de pantalla (uso / reloj+clima)
+
+### Conexiones
+
+El boton touch y la tira de LEDs externa son los unicos componentes a cablear; el display y el LED integrado ya vienen en la placa.
+
+```
+        Waveshare ESP32-S3 LCD 1.47" B
+        +------------------------------+
+        |                              |
+        |   [ LCD ST7789 320x172 ]     |
+        |                              |
+        |  GPIO38 WS2812 (integrado)   |  <- ambiental, no se cablea
+        |                              |
+        |  VBUS   GND   GPIO2  GPIO10  |  (VBUS = 5V; en la placa dice VBUS)
+        +----|------|------|------|----+
+             |      |      |      |
+             |      |      |      +-----------------------+
+             |      |      |                              |
+             |      |      |                        +-----------+
+             |      |      |     TTP223 (touch)     |  VCC  3V3 |  (a 3V3 de la placa)
+             |      |      |                        |  GND  GND |
+             |      |      |                        |  I/O  GPIO10
+             |      |      |                        +-----------+
+             |      |      |
+             |      |      |   Tira 3x WS2812B (VBUS/5V, GND comun con la placa)
+             |      |      |   +--------+   +--------+   +--------+
+             |      |      +-->| DIN    |   |        |   |        |
+             |      |          |  LED 0 |DO>| LED 1  |DO>| LED 2  |
+             |      |          | (5h)   |   | (7dias)|   | (extra)|
+             |      |          +--------+   +--------+   +--------+
+             |      |             |  |         |  |         |  |
+             +------|-------------+  | VBUS ---+  | VBUS ---+  |   <- VBUS/5V a cada LED
+                    +----------------+ GND -------+ GND ------+   <- GND comun
+```
+
+| Senal | Pin placa | Componente |
+|-------|-----------|------------|
+| Datos LEDs | GPIO2 | DIN del primer WS2812B de la tira |
+| Boton | GPIO10 | I/O del TTP223 (activo alto) |
+| Alimentacion tira | VBUS (5V) | VCC de los 3 WS2812B |
+| Tierra comun | GND | GND de la tira y del TTP223 |
+| TTP223 VCC | 3V3 | alimentacion del modulo touch |
+
+> La tira de LEDs necesita 5V (pin **VBUS** de la placa) y **tierra comun**. Para 3 LEDs el consumo es bajo y puede salir del VBUS de la placa; con tiras mas largas usar fuente externa.
 
 ## Setup
 
@@ -80,7 +126,7 @@ Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico seg
 ### ESP32 (Arduino IDE)
 
 1. Board: ESP32S3 Dev Module, 16MB Flash, OPI PSRAM, USB CDC On Boot Enabled
-2. Librerias: TFT_eSPI, ArduinoJson, WiFiManager (by tzapu)
+2. Librerias: TFT_eSPI, ArduinoJson, WiFiManager (by tzapu), Adafruit NeoPixel
 3. Configurar `User_Setup.h` de TFT_eSPI para la placa Waveshare
 4. Flashear `firmware/Clawdmeter/Clawdmeter.ino`
 5. Conectar al AP "Clawdmeter-Setup" para configurar WiFi
@@ -95,7 +141,8 @@ Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico seg
 | EXTRA USAGE | Creditos gastados / limite mensual (en USD) |
 | Plan | Tipo de suscripcion (Max 5x, Pro, etc.) |
 | Upd | Ultima actualizacion exitosa (cambia a rojo si falla) |
-| LED RGB | Verde (0%) a rojo (100%) segun uso de 5h |
+| Tira LED | 3 LEDs verde (0%) a rojo (100%): 5h, 7 dias y extra (azul tenue si no aplica) |
+| LED integrado | Color ambiental que cambia suavemente (decorativo) |
 
 ## Configuracion del ESP32
 

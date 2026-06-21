@@ -208,7 +208,7 @@ void handleSave() {
 
   saveConfig();
 
-  if (dataValid) updateRgbLed(usage.five_hour_pct);
+  if (dataValid) updateUsageLeds();
 
   webServer.sendHeader("Location", "/", true);
   webServer.send(302, "text/plain", "Saved. Redirecting...");

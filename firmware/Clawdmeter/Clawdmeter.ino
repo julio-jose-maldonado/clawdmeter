@@ -23,11 +23,20 @@
 #include <ArduinoJson.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
+#include <Adafruit_NeoPixel.h>
 
 // ---- HARDWARE ----
 const int LCD_BL_PIN = 46;
-const int RGB_LED_PIN = 38;
+const int RGB_LED_PIN = 38;    // LED WS2812 integrado: efecto ambiental
 const int TOUCH_BTN_PIN = 10;  // TTP223: VCC->3V3, GND->GND, IO->GPIO10 (activo alto)
+
+// Tira externa de 3 WS2812B encadenados: estados de uso (5h / 7 dias / extra).
+// Cablear DIN del primer modulo a EXT_LED_PIN, alimentar a 5V y GND comun.
+#define EXT_LED_PIN   2
+#define EXT_LED_COUNT 3
+#define LED_5H    0
+#define LED_7D    1
+#define LED_EXTRA 2
 
 // ---- COLORES (RGB565) ----
 #define COL_BG       0x0000
@@ -99,6 +108,7 @@ Config config;
 Preferences prefs;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
+Adafruit_NeoPixel extLeds(EXT_LED_COUNT, EXT_LED_PIN, NEO_GRB + NEO_KHZ800);
 WebServer webServer(80);
 WiFiManager wm;
 
@@ -128,6 +138,11 @@ void setup() {
   tft.fillScreen(COL_BG);
   initBacklight();
 
+  randomSeed(esp_random());
+  extLeds.begin();
+  extLeds.clear();
+  extLeds.show();
+
   spr.createSprite(320, 172);
   spr.setSwapBytes(true);
 
@@ -143,7 +158,7 @@ void setup() {
   setupWebServer();
 
   dataValid = fetchUsage();
-  if (dataValid) updateRgbLed(usage.five_hour_pct);
+  if (dataValid) updateUsageLeds();
   drawScreen();
 
   lastRefresh = millis();
@@ -162,7 +177,7 @@ void loop() {
     bool ok = fetchUsage();
     if (ok) {
       dataValid = true;
-      updateRgbLed(usage.five_hour_pct);
+      updateUsageLeds();
     }
     drawScreen();
     lastRefresh = millis();
@@ -170,6 +185,7 @@ void loop() {
 
   refreshWeatherIfDue();
   tickClockRedraw();
+  tickAmbientLed();
 
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi lost, reconnecting...");
