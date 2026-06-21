@@ -112,6 +112,23 @@ void handleRoot() {
   html += "</select>";
   html += "</div>";
 
+  // Alertas
+  html += "<div class='panel'><h2>Alertas</h2>";
+  html += "<label style='display:flex;align-items:center;gap:8px;cursor:pointer'>";
+  html += "<input type='checkbox' name='alerts_en' value='1' style='width:18px;height:18px;accent-color:var(--accent)' ";
+  html += String(config.alerts_enabled ? "checked" : "") + "> Alertas sonoras activadas</label>";
+  html += "<div class='help'>Beep + parpadeo del LED cuando el uso (5h o 7 dias) cruza un umbral</div>";
+
+  html += "<label>Umbral de aviso (%)</label>";
+  html += "<input type='number' name='warn_thr' value='" + String(config.warn_threshold) + "' min='50' max='99'>";
+  html += "<label>Umbral critico (%)</label>";
+  html += "<input type='number' name='crit_thr' value='" + String(config.crit_threshold) + "' min='51' max='100'>";
+
+  html += "<label>GPIO del buzzer</label>";
+  html += "<input type='number' name='buzzer_pin' value='" + String(config.buzzer_pin) + "' min='0' max='48'>";
+  html += "<div class='help'>Buzzer pasivo (PWM). 0 = sin sonido (solo parpadeo). Pines seguros: 11, 12, 13, 14, 21. Un pin reservado se ignora.</div>";
+  html += "</div>";
+
   html += "<div class='panel'><h2>Clima</h2>";
   html += "<label>Ciudad</label>";
   html += "<div style='display:flex;gap:8px;align-items:center'>";
@@ -191,6 +208,15 @@ void handleSave() {
 
   if (webServer.hasArg("admin_pass") && webServer.arg("admin_pass").length() > 0) {
     strlcpy(config.admin_pass, webServer.arg("admin_pass").c_str(), sizeof(config.admin_pass));
+  }
+
+  // Alertas: checkbox solo aparece como arg si esta tildado
+  config.alerts_enabled = webServer.hasArg("alerts_en");
+  if (webServer.hasArg("warn_thr")) config.warn_threshold = constrain(webServer.arg("warn_thr").toInt(), 50, 99);
+  if (webServer.hasArg("crit_thr")) config.crit_threshold = constrain(webServer.arg("crit_thr").toInt(), 51, 100);
+  if (webServer.hasArg("buzzer_pin")) {
+    int p = webServer.arg("buzzer_pin").toInt();
+    if (buzzerPinValid(p)) config.buzzer_pin = p;  // un pin reservado se ignora
   }
 
   if (webServer.hasArg("city")) strlcpy(config.city, webServer.arg("city").c_str(), sizeof(config.city));

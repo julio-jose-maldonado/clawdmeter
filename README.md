@@ -44,8 +44,11 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
     ├── Clawdmeter.ino           # Main (setup, loop, globals)
     ├── config.ino               # Configuracion (NVS)
     ├── colors.ino               # Backlight, gradientes, LED integrado + tira externa
+    ├── alerts.ino               # Alertas por umbral (buzzer + parpadeo)
     ├── display.ino              # Pantalla TFT (UI completa)
     ├── network.ino              # WiFi, NTP, fetch de datos con reintentos
+    ├── touch.ino                # Boton touch (cambio de pantalla)
+    ├── weather.ino              # Clima (Open-Meteo)
     └── webconfig.ino            # Web server de configuracion
 ```
 
@@ -56,10 +59,11 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 - **LED integrado:** WS2812 (GPIO38) — efecto ambiental con cambio fluido de color
 - **Tira externa:** 3x WS2812B encadenados (GPIO2) — un LED por metrica (5h / 7 dias / extra), gradiente verde a rojo segun uso
 - **Boton touch:** TTP223 (GPIO10) — cambia de pantalla (uso / reloj+clima)
+- **Buzzer (opcional):** pasivo (GPIO11 por defecto, configurable) — beep al cruzar umbrales de uso
 
 ### Conexiones
 
-El boton touch y la tira de LEDs externa son los unicos componentes a cablear; el display y el LED integrado ya vienen en la placa.
+El boton touch, la tira de LEDs externa y el buzzer son los componentes a cablear; el display y el LED integrado ya vienen en la placa. El buzzer es opcional.
 
 ```
         Waveshare ESP32-S3 LCD 1.47" B
@@ -95,11 +99,14 @@ El boton touch y la tira de LEDs externa son los unicos componentes a cablear; e
 |-------|-----------|------------|
 | Datos LEDs | GPIO2 | DIN del primer WS2812B de la tira |
 | Boton | GPIO10 | I/O del TTP223 (activo alto) |
+| Buzzer (opcional) | GPIO11 | "+" del buzzer pasivo (el otro pin a GND) |
 | Alimentacion tira | VBUS (5V) | VCC de los 3 WS2812B |
-| Tierra comun | GND | GND de la tira y del TTP223 |
+| Tierra comun | GND | GND de la tira, el TTP223 y el buzzer |
 | TTP223 VCC | 3V3 | alimentacion del modulo touch |
 
 > La tira de LEDs necesita 5V (pin **VBUS** de la placa) y **tierra comun**. Para 3 LEDs el consumo es bajo y puede salir del VBUS de la placa; con tiras mas largas usar fuente externa.
+
+> **Buzzer:** pasivo (se controla con PWM/tono), dos cables — uno a GPIO11 y el otro a GND. El pin es configurable desde la web UI; pines seguros: 11, 12, 13, 14, 21. Pin `0` = sin sonido (solo parpadeo del LED).
 
 ## Setup
 
@@ -143,6 +150,7 @@ Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico seg
 | Upd | Ultima actualizacion exitosa (cambia a rojo si falla) |
 | Tira LED | 3 LEDs verde (0%) a rojo (100%): 5h, 7 dias y extra (azul tenue si no aplica) |
 | LED integrado | Color ambiental que cambia suavemente (decorativo) |
+| Buzzer | Beep + parpadeo al cruzar umbral de aviso (~80%) o critico (~95%) en 5h, 7 dias y extra. Tono distinto por metrica (grave/medio/agudo), 1 beep=aviso, 2=critico |
 
 ## Configuracion del ESP32
 
@@ -153,6 +161,7 @@ Acceder a `http://clawdmeter.local` desde cualquier dispositivo en la misma red:
 - Brillo LCD y LED
 - Invertir pantalla 180°
 - Zona horaria
+- Alertas: on/off, umbrales de aviso/critico y GPIO del buzzer
 - Password de admin
 
 ## Por que un browser?
