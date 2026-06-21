@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.0] - 2026-06-21
+
+### Added
+- Auto-arranque del proxy en macOS (`scripts/install-autostart.sh`): instala un LaunchAgent que corre `start.sh` al iniciar sesion (con `--uninstall` para quitarlo). Inyecta el PATH de node/pnpm, reintenta si el proxy se cae (KeepAlive) y loguea en `~/Library/Logs/clawdmeter.log`
+
 ## [2.8.0] - 2026-06-21
 
 ### Added
