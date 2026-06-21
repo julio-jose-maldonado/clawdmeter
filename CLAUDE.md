@@ -47,7 +47,7 @@ Arduino IDE concatenates all `.ino` files in the folder into one compilation uni
 - Config persists in NVS via `Preferences`; runtime configuration via a web UI served by the ESP32 at `http://clawdmeter.local` (mDNS).
 - Display is a 320x172 landscape ST7789 driven through a full-screen `TFT_eSprite` (draw to sprite, push once — avoids flicker).
 - LEDs (`colors.ino`): the onboard WS2812 (GPIO38) runs a smooth random ambient color cycle (`tickAmbientLed`); an external chain of 3 WS2812B (Adafruit NeoPixel on `EXT_LED_PIN`, default GPIO2) shows green→red gradients for the three usage metrics — 5-hour, 7-day, extra (`updateUsageLeds`). The external strip needs 5V power and common ground.
-- Alerts (`alerts.ino`): when 5-hour or 7-day usage crosses a warn (default 80%) or critical (default 95%) threshold, a passive buzzer beeps (`tone()` on `config.buzzer_pin`, default GPIO11, configurable in the web UI; `0` = silent) and the metric's LED flashes. `checkAlerts()` fires only on a rising level (once per crossing, rearms when usage drops); `initAlertBaseline()` sets the baseline at boot without sounding. `buzzerPinValid()` blocks reserved/strapping/flash pins.
+- Alerts (`alerts.ino`): when 5-hour, 7-day or extra usage crosses a warn (default 80%) or critical (default 95%) threshold, a passive buzzer beeps (`tone()` on `config.buzzer_pin`, default GPIO11, configurable in the web UI; `0` = silent) and the metric's LED flashes. Each metric has its own tone (`FREQ_5H/7D/EXTRA`) and severity is the beep count (1=warn, 2=crit). `checkAlerts()` fires only on a rising level (once per crossing, rearms when usage drops); `initAlertBaseline()` sets the baseline at boot without sounding. `buzzerPinValid()` blocks reserved/strapping/flash pins.
 
 ## Conventions
 

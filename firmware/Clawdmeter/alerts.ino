@@ -1,10 +1,17 @@
-// Alertas sonoras + parpadeo cuando el uso cruza umbrales (5h / 7 dias).
+// Alertas sonoras + parpadeo cuando el uso cruza umbrales (5h / 7 dias / extra).
 // Buzzer pasivo en config.buzzer_pin (PWM via tone()). Una alerta por cruce:
 // no repite en cada refresh y se rearma sola cuando el uso baja del umbral.
+
+// Tono propio por metrica (identidad sonora): grave=5h, medio=7d, agudo=extra.
+// La severidad va por cantidad de beeps (aviso=1, critico=2).
+#define FREQ_5H    1500
+#define FREQ_7D    2000
+#define FREQ_EXTRA 2600
 
 // Nivel anterior por metrica (0=normal, 1=aviso, 2=critico) para detectar subidas.
 static uint8_t lastLevel5h = 0;
 static uint8_t lastLevel7d = 0;
+static uint8_t lastLevelExtra = 0;
 
 // Valida que el pin sea seguro para el buzzer en esta placa (ESP32-S3, OPI PSRAM).
 // 0 = desactivado. Rechaza strapping/flash/PSRAM/USB/Serial y los pines ya usados.
@@ -37,11 +44,10 @@ void beep(uint16_t freq, uint16_t durMs) {
 }
 
 // Parpadeo blanco del LED de la metrica + beep(s): 1 pulso=aviso, 2=critico.
-// El critico suena mas agudo para distinguirlo de oido.
-void fireAlert(uint8_t level, uint8_t ledIdx) {
+// Cada metrica usa su propia frecuencia (freq) para reconocerla de oido.
+void fireAlert(uint8_t level, uint8_t ledIdx, uint16_t freq) {
   uint32_t prev = extLeds.getPixelColor(ledIdx);
   uint8_t pulses = (level == 2) ? 2 : 1;
-  uint16_t freq  = (level == 2) ? 2400 : 1800;
   for (uint8_t i = 0; i < pulses; i++) {
     extLeds.setPixelColor(ledIdx, extLeds.Color(255, 255, 255));
     extLeds.show();
@@ -58,16 +64,20 @@ void fireAlert(uint8_t level, uint8_t ledIdx) {
 void initAlertBaseline() {
   lastLevel5h = alertLevel(usage.five_hour_pct);
   lastLevel7d = alertLevel(usage.seven_day_pct);
+  lastLevelExtra = alertLevel(usage.extra_pct);
 }
 
 // Llamar tras cada refresh: dispara solo cuando el nivel SUBE; rearma al bajar.
 void checkAlerts() {
   uint8_t n5 = alertLevel(usage.five_hour_pct);
   uint8_t n7 = alertLevel(usage.seven_day_pct);
+  uint8_t ne = alertLevel(usage.extra_pct);
   if (config.alerts_enabled) {
-    if (n5 > lastLevel5h) fireAlert(n5, LED_5H);
-    if (n7 > lastLevel7d) fireAlert(n7, LED_7D);
+    if (n5 > lastLevel5h)    fireAlert(n5, LED_5H,    FREQ_5H);
+    if (n7 > lastLevel7d)    fireAlert(n7, LED_7D,    FREQ_7D);
+    if (ne > lastLevelExtra) fireAlert(ne, LED_EXTRA, FREQ_EXTRA);
   }
   lastLevel5h = n5;
   lastLevel7d = n7;
+  lastLevelExtra = ne;
 }
