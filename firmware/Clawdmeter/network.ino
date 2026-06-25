@@ -87,6 +87,50 @@ void formatTimeRemaining(const char* isoStr, char* out, size_t len) {
   }
 }
 
+// Sparkline + proyeccion de la ventana de 5h desde el proxy (/api/history).
+// Independiente de fetchUsage: si falla, se conserva el ultimo dato bueno.
+bool fetchTrend() {
+  if (WiFi.status() != WL_CONNECTED) return false;
+
+  char url[176];
+  snprintf(url, sizeof(url),
+           "http://%s:%d/api/history/sparkline?metric=five_hour&points=%d&window=5h",
+           config.proxy_ip, config.proxy_port, TREND_MAX_PTS);
+
+  HTTPClient http;
+  http.begin(url);
+  http.setTimeout(10000);
+  int httpCode = http.GET();
+  if (httpCode != 200) {
+    http.end();
+    return false;
+  }
+
+  String payload = http.getString();
+  http.end();
+
+  JsonDocument doc;
+  if (deserializeJson(doc, payload)) return false;
+
+  JsonArray pts = doc["points"];
+  uint8_t n = 0;
+  for (JsonVariant v : pts) {
+    if (n >= TREND_MAX_PTS) break;
+    trend.points[n++] = (uint8_t)constrain((int)(v | 0), 0, 100);
+  }
+  trend.count   = n;
+  trend.peak    = (uint8_t)constrain((int)(doc["peak"] | 0), 0, 100);
+  trend.current = (uint8_t)constrain((int)(doc["current"] | 0), 0, 100);
+  trend.etaMin   = (int16_t)(doc["etaMin"] | -1);
+  trend.resetMin = (int16_t)(doc["resetMin"] | -1);
+  trend.hitsLimit = doc["hitsLimit"] | false;
+  strlcpy(trend.trend, doc["trend"] | "flat", sizeof(trend.trend));
+
+  Serial.printf("Trend OK — %d pts | actual %d%% | pico %d%% | eta %d min | %s\n",
+                trend.count, trend.current, trend.peak, trend.etaMin, trend.trend);
+  return true;
+}
+
 bool fetchUsage() {
   if (WiFi.status() != WL_CONNECTED) {
     snprintf(lastError, sizeof(lastError), "WiFi desconectado");
@@ -157,6 +201,15 @@ parse:
   } else {
     usage.extra_pct = -1;
   }
+
+  // Proyeccion embebida (para los LEDs) + estado del proxy (para el LED de salud)
+  JsonVariant proj = doc["projection"];
+  usage.five_hour_hits   = proj["five_hour"]["hitsLimit"] | false;
+  usage.five_hour_rising = strcmp(proj["five_hour"]["trend"] | "flat", "up") == 0;
+  usage.seven_day_hits   = proj["seven_day"]["hitsLimit"] | false;
+  usage.seven_day_rising = strcmp(proj["seven_day"]["trend"] | "flat", "up") == 0;
+  usage.proxy_ok   = doc["proxy"]["ok"] | true;
+  usage.data_stale = doc["stale"] | false;
 
   lastSuccessMillis = millis();
   struct tm now;

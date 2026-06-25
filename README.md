@@ -35,8 +35,9 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 ├── proxy/
 │   ├── server.js                # Entry point (Express + rutas)
 │   ├── lib/
-│   │   ├── browser.js           # Conexion Brave/CDP, fetch a claude.ai
-│   │   └── usage.js             # Cache y refresh de datos de uso
+│   │   ├── browser.js           # Conexion Brave/CDP (resiliente: reconecta, no muere)
+│   │   ├── usage.js             # Cache y refresh de datos de uso
+│   │   └── history.js           # Historico de uso en SQLite + proyeccion
 │   └── public/                  # PWA (widget de escritorio)
 │       ├── index.html           # Dashboard web instalable
 │       ├── manifest.json        # Manifest PWA
@@ -47,7 +48,11 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
     ├── config.ino               # Configuracion (NVS)
     ├── colors.ino               # Backlight, gradientes, LED integrado + tira externa
     ├── alerts.ino               # Alertas por umbral (buzzer + parpadeo)
-    ├── display.ino              # Pantalla TFT (UI completa)
+    ├── display.ino              # UI comun: mensajes, header, footer, dispatch
+    ├── screen_usage.ino         # Pantalla USO (5h / 7 dias / extra)
+    ├── screen_trend.ino         # Pantalla TENDENCIA (sparkline 5h + proyeccion)
+    ├── screen_clock.ino         # Pantalla FECHA Y HORA
+    ├── screen_weather.ino       # Pantalla CLIMA
     ├── network.ino              # WiFi, NTP, fetch de datos con reintentos
     ├── touch.ino                # Boton touch (cambio de pantalla)
     ├── weather.ino              # Clima (Open-Meteo)
@@ -59,8 +64,8 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 - **Board:** Waveshare ESP32-S3 LCD 1.47" (version B)
 - **Display:** ST7789, 172x320px (landscape)
 - **LED integrado:** WS2812 (GPIO38) — efecto ambiental con cambio fluido de color
-- **Tira externa:** 3x WS2812B encadenados (GPIO2) — un LED por metrica (5h / 7 dias / extra), gradiente verde a rojo segun uso
-- **Boton touch:** TTP223 (GPIO10) — toque corto: cambia de pantalla (uso / reloj+clima); toque largo (~1s): gira la pantalla 180°
+- **Tira externa:** 3x WS2812B encadenados (GPIO2) — muestran *estado* con fade suave: LED 5h y 7d = **proyeccion** (verde ok / ambar subiendo / rojo vas a tocar el limite), LED extra = **salud del sistema** (verde fresco / ambar viejo / rojo caido)
+- **Boton touch:** TTP223 (GPIO10) — toque corto: cambia de pantalla (uso / tendencia / reloj+clima); toque largo (~1s): gira la pantalla 180°
 - **Buzzer (opcional):** pasivo (GPIO11 por defecto, configurable) — beep al cruzar umbrales de uso
 
 ### Conexiones
@@ -113,7 +118,7 @@ El boton touch, la tira de LEDs externa y el buzzer son los componentes a cablea
 ./start.sh
 ```
 
-Requiere: Node.js, pnpm, Brave Browser, Playwright (`pnpm install` se ejecuta automaticamente).
+Requiere: Node.js, pnpm, Brave Browser. `pnpm install` (automatico) instala Playwright y **better-sqlite3** (historico de uso). better-sqlite3 es un modulo nativo: si tu version de Node no trae binario precompilado se compila de fuente (necesita Xcode Command Line Tools + Python). El build viene pre-aprobado en `proxy/pnpm-workspace.yaml`.
 
 #### Auto-arranque (opcional, macOS)
 
@@ -144,7 +149,7 @@ Instala un LaunchAgent (`~/Library/LaunchAgents/com.clawdmeter.proxy.plist`) que
 2. Click en el icono de instalar en la barra de URL
 3. Se abre como ventana standalone — un widget sin barra del browser
 
-Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico segun el uso.
+Muestra los mismos datos que el ESP32 mas un **historico**: grafico de tendencia de las 3 metricas (ventanas 5H / 24H / 7D) y cards con pico, promedio, "en rojo" y proyeccion (5h y semana). El layout se adapta: fila en pantalla ancha, columna en angosta. Si el proxy se cae o expira la sesion, muestra un banner de estado.
 
 ### ESP32 (Arduino IDE)
 
@@ -162,9 +167,10 @@ Muestra los mismos datos que el ESP32 con colores gradientes y glow dinamico seg
 | 5 HORAS | Uso en la ventana de 5h + tiempo para reset |
 | 7 DIAS | Uso en la ventana de 7 dias + tiempo para reset |
 | EXTRA USAGE | Creditos gastados / limite mensual (en USD) |
+| TENDENCIA | Pantalla con mini-grafico de las ultimas 5h + % actual + proyeccion ("Limite en Xh" u "OK") |
 | Plan | Tipo de suscripcion (Max 5x, Pro, etc.) |
 | Upd | Ultima actualizacion exitosa (cambia a rojo si falla) |
-| Tira LED | 3 LEDs verde (0%) a rojo (100%): 5h, 7 dias y extra (azul tenue si no aplica) |
+| Tira LED | 3 LEDs con fade suave: 5h y 7d = proyeccion (verde/ambar/rojo), extra = salud del proxy (frescos/viejos/caido) |
 | LED integrado | Color ambiental que cambia suavemente (decorativo) |
 | Buzzer | Beep + parpadeo al cruzar umbral de aviso (~80%) o critico (~95%) en 5h, 7 dias y extra. Tono distinto por metrica (grave/medio/agudo), 1 beep=aviso, 2=critico |
 | Inicio | Self-test al bootear: barrido de los 3 LEDs con el tono de cada alerta (verifica tira + buzzer) |

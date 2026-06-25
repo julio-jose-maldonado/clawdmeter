@@ -38,6 +38,12 @@ const int TOUCH_BTN_PIN = 10;  // TTP223: VCC->3V3, GND->GND, IO->GPIO10 (activo
 #define LED_7D    1
 #define LED_EXTRA 2
 
+// Tonos (HSV, grados) para el estado de los LEDs externos: verde->ambar->rojo.
+// 5h/7d muestran la proyeccion; el extra muestra la salud del sistema.
+#define HUE_LED_GREEN 120.0f
+#define HUE_LED_AMBER  40.0f
+#define HUE_LED_RED     0.0f
+
 // Buzzer pasivo (PWM/tone): alertas sonoras al cruzar umbrales de uso.
 // El pin es configurable desde la web UI; este es solo el valor por defecto.
 #define BUZZER_PIN_DEFAULT 11
@@ -101,6 +107,13 @@ struct UsageData {
   float extra_limit;
   char  org_name[32];
   char  plan[32];
+  // Proyeccion (para los LEDs) y salud, embebidos en /api/usage
+  bool  five_hour_hits;    // toca el limite antes del reset
+  bool  five_hour_rising;  // tendencia subiendo
+  bool  seven_day_hits;
+  bool  seven_day_rising;
+  bool  proxy_ok;          // Brave conectado + sesion valida
+  bool  data_stale;        // datos viejos segun el proxy
 };
 
 struct WeatherInfo {
@@ -112,8 +125,24 @@ struct WeatherInfo {
   bool  is_day;
 };
 
+// Tendencia: sparkline + proyeccion que sirve el proxy (/api/history/sparkline)
+#define TREND_MAX_PTS 48
+struct TrendData {
+  uint8_t points[TREND_MAX_PTS]; // % 0-100, mas viejo -> mas nuevo
+  uint8_t count;
+  uint8_t peak;
+  uint8_t current;
+  int16_t etaMin;                // minutos al 100%; -1 = sin proyeccion
+  int16_t resetMin;              // minutos al reset de la ventana; -1 = desconocido
+  bool    hitsLimit;             // true = tocas el 100% antes del reset
+  char    trend[6];              // "up" / "down" / "flat"
+};
+
 // ---- PANTALLAS ----
-enum { SCREEN_USAGE = 0, SCREEN_CLOCK, SCREEN_WEATHER, NUM_SCREENS };
+enum { SCREEN_USAGE = 0, SCREEN_TREND, SCREEN_CLOCK, SCREEN_WEATHER, NUM_SCREENS };
+
+// ---- SALUD DEL SISTEMA (LED extra) ----
+enum { HEALTH_OK = 0, HEALTH_STALE, HEALTH_DOWN };
 
 // ---- GLOBALS ----
 Config config;
@@ -121,6 +150,8 @@ Preferences prefs;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
 Adafruit_NeoPixel extLeds(EXT_LED_COUNT, EXT_LED_PIN, NEO_GRB + NEO_KHZ800);
+float extLedHue[EXT_LED_COUNT];        // tono actual de cada LED externo (fade)
+float extLedTargetHue[EXT_LED_COUNT];  // tono objetivo segun estado
 WebServer webServer(80);
 WiFiManager wm;
 
@@ -138,6 +169,9 @@ bool weatherValid = false;
 unsigned long lastWeatherFetch = 0;
 const unsigned long WEATHER_TTL_MS = 15UL * 60UL * 1000UL;
 
+TrendData trend;
+bool trendValid = false;
+
 // ---- SETUP ----
 void setup() {
   Serial.begin(115200);
@@ -154,6 +188,7 @@ void setup() {
   extLeds.begin();
   extLeds.clear();
   extLeds.show();
+  for (int i = 0; i < EXT_LED_COUNT; i++) extLedHue[i] = extLedTargetHue[i] = HUE_LED_GREEN;
 
   startupSelfTest();  // comprobacion de inicio: recorre las 3 alertas (LED + tono)
 
@@ -176,6 +211,7 @@ void setup() {
     updateUsageLeds();
     initAlertBaseline();  // fija el nivel actual sin sonar en el arranque
   }
+  trendValid = fetchTrend();
   drawScreen();
 
   lastRefresh = millis();
@@ -197,6 +233,7 @@ void loop() {
       updateUsageLeds();
       checkAlerts();
     }
+    if (fetchTrend()) trendValid = true;  // conserva el ultimo bueno si falla
     drawScreen();
     lastRefresh = millis();
   }
@@ -204,6 +241,7 @@ void loop() {
   refreshWeatherIfDue();
   tickClockRedraw();
   tickAmbientLed();
+  tickExtLeds();
   tickNightDim();
 
   if (WiFi.status() != WL_CONNECTED) {
