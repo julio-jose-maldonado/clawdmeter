@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.10.0] - 2026-06-25
+
+### Added
+- Historico de uso persistido en SQLite (`lib/history.js`, `better-sqlite3`, `proxy/data/history.db`, ring buffer de 14 dias). El proxy se auto-muestrea cada 60s, asi el historico crece aunque no haya clientes
+- Endpoints `GET /api/history` (serie + stats, para la PWA) y `GET /api/history/sparkline` (compacto, para el ESP32)
+- Vista de historico en la PWA: grafico de tendencia (canvas) de las 3 metricas con selector 5H/24H/7D + cards (pico, promedio, "en rojo", proyeccion de 5h y de la semana). Layout responsive (fila en ancho, columna en angosto)
+- Pantalla TENDENCIA en el ESP32 (`SCREEN_TREND`): sparkline de las ultimas 5h + % actual + proyeccion, en el ciclo del boton touch
+- Proyeccion: ETA al limite por regresion lineal del ritmo reciente, cruzada con el reset de la ventana (muestra si llegas al limite antes, o si resetea primero); ventana de regresion por metrica con minimo de datos para no proyectar sobre ruido
+- Resiliencia del proxy: ya no termina el proceso si no hay sesion; reconecta solo (con backoff); expone su estado (`getStatus`) en `/api/usage` y `/health`; la PWA muestra un banner segun el caso (Brave caido / sin sesion / datos viejos)
+- `WARN_THRESHOLD` configurable en `.env` (umbral de "zona roja" de las stats del historico)
+
+### Changed
+- Los LEDs externos pasan de mostrar el uso crudo a mostrar **estado**, con fade suave por HSV (verde->ambar->rojo): LED 5h y 7d = proyeccion, LED extra = salud del sistema (datos frescos / viejos / caidos). `updateUsageLeds` fija los tonos objetivo y `tickExtLeds` hace el fade no bloqueante
+- `/api/usage` ahora incluye `proxy` (estado), `stale` y `projection` (campos opcionales, retrocompatibles)
+- Firmware reorganizado: cada pantalla en su propio `screen_*.ino` (`screen_usage`, `screen_trend`, `screen_clock`, `screen_weather`); `display.ino` queda solo con la UI comun (mensajes, header, footer, dispatch)
+
+### Security
+- Eliminado el endpoint `/api/debug/{*path}`: era un passthrough a cualquier path de la API de claude.ai con la sesion del usuario (acceso total a la cuenta), sin auth
+- Eliminado el header `Access-Control-Allow-Origin: *`: no hacia falta (la PWA es same-origin, el ESP32 no es browser) y permitia que cualquier web externa leyera los endpoints del proxy
+
 ## [2.9.0] - 2026-06-21
 
 ### Added

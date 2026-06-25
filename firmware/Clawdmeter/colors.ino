@@ -61,26 +61,71 @@ uint16_t tempColor(float t) {
   return COL_RED;
 }
 
-// Tira externa de 3 WS2812B: un LED por metrica (5h / 7 dias / extra),
-// con el mismo gradiente verde->rojo que las barras del display.
-void updateUsageLeds() {
-  float scale = config.led_brightness / 255.0f;
-  uint8_t r, g, b;
+// Tira externa de 3 WS2812B: 5h y 7d muestran la PROYECCION (no el uso crudo),
+// el extra muestra la SALUD del sistema. Todo con fade suave por hue (ver tickExtLeds).
 
-  pctToRGB(usage.five_hour_pct, r, g, b);
-  extLeds.setPixelColor(LED_5H, extLeds.Color(r * scale, g * scale, b * scale));
+// Tono objetivo de un LED de proyeccion:
+// rojo = toca el limite antes del reset; ambar = subiendo (resetea a tiempo);
+// verde = estable/bajando o sin proyeccion.
+float projHue(bool hits, bool rising) {
+  if (hits)   return HUE_LED_RED;
+  if (rising) return HUE_LED_AMBER;
+  return HUE_LED_GREEN;
+}
 
-  pctToRGB(usage.seven_day_pct, r, g, b);
-  extLeds.setPixelColor(LED_7D, extLeds.Color(r * scale, g * scale, b * scale));
+// Estado de salud: rojo si no llegan datos / Brave o sesion caidos; ambar si los
+// datos estan viejos; verde si todo fresco.
+int getHealthState() {
+  if (WiFi.status() != WL_CONNECTED) return HEALTH_DOWN;
+  if (!dataValid || lastSuccessMillis == 0) return HEALTH_DOWN;
+  unsigned long cycle = (unsigned long)config.refresh_sec * 1000;
+  if (cycle == 0) cycle = 60000;
+  unsigned long elapsed = millis() - lastSuccessMillis;
+  if (elapsed > cycle * 3 || !usage.proxy_ok) return HEALTH_DOWN;
+  if (usage.data_stale || elapsed > cycle * 2) return HEALTH_STALE;
+  return HEALTH_OK;
+}
 
-  if (usage.extra_pct >= 0) {
-    pctToRGB(usage.extra_pct, r, g, b);
-    extLeds.setPixelColor(LED_EXTRA, extLeds.Color(r * scale, g * scale, b * scale));
-  } else {
-    // Sin plan de extra usage: azul tenue como indicador de "no aplica".
-    extLeds.setPixelColor(LED_EXTRA, extLeds.Color(0, 0, (uint8_t)(60 * scale)));
+float healthHue() {
+  switch (getHealthState()) {
+    case HEALTH_DOWN:  return HUE_LED_RED;
+    case HEALTH_STALE: return HUE_LED_AMBER;
+    default:           return HUE_LED_GREEN;
   }
+}
 
+// Fija los tonos objetivo de 5h/7d segun la proyeccion. Llamar tras cada refresh.
+// El LED extra (salud) lo recalcula tickExtLeds en vivo.
+void updateUsageLeds() {
+  extLedTargetHue[LED_5H] = projHue(usage.five_hour_hits, usage.five_hour_rising);
+  extLedTargetHue[LED_7D] = projHue(usage.seven_day_hits, usage.seven_day_rising);
+}
+
+// Fade no bloqueante hacia el tono objetivo, interpolando por hue (verde->ambar->
+// rojo sin pasar por colores feos). Llamado desde loop() en cada vuelta.
+void tickExtLeds() {
+  static unsigned long last = 0;
+  if (millis() - last < 30) return;
+  last = millis();
+
+  extLedTargetHue[LED_EXTRA] = healthHue();  // la salud se evalua en vivo
+
+  float scale = config.led_brightness / 255.0f;
+  for (int i = 0; i < EXT_LED_COUNT; i++) {
+    float diff = extLedTargetHue[i] - extLedHue[i];
+    if (diff > 180)  diff -= 360;            // camino mas corto en el circulo
+    if (diff < -180) diff += 360;
+    if (fabs(diff) < 1.0f) {
+      extLedHue[i] = extLedTargetHue[i];
+    } else {
+      extLedHue[i] += diff * 0.06f;          // easing suave (~1s)
+      if (extLedHue[i] < 0)    extLedHue[i] += 360;
+      if (extLedHue[i] >= 360) extLedHue[i] -= 360;
+    }
+    uint8_t r, g, b;
+    hsvToRgb(extLedHue[i], 1.0f, 1.0f, r, g, b);
+    extLeds.setPixelColor(i, extLeds.Color(r * scale, g * scale, b * scale));
+  }
   extLeds.show();
 }
 

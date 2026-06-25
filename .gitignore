@@ -5,6 +5,9 @@ venv/
 __pycache__/
 .DS_Store
 
+# Historico de uso persistido por el proxy
+proxy/data/
+
 # Arduino: artefactos de compilacion (Export Compiled Binary)
 firmware/**/build/
 *.bin

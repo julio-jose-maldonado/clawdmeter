@@ -17,14 +17,19 @@
     color: #e0e0e0;
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    gap: 18px;
     min-height: 100vh;
+    padding: 24px 12px;
     -webkit-user-select: none;
     user-select: none;
   }
 
   .device {
+    flex: 0 0 auto;
     width: 420px;
     height: 230px;
     background: #000;
@@ -230,9 +235,69 @@
     color: #00ddff;
     font-size: 14px;
   }
+
+  /* --- Historico (vista que puede crecer) --- */
+  .history {
+    flex: 1 1 480px;
+    max-width: 800px;
+    background: #000;
+    border: 3px solid #222;
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .hist-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .hist-title { color: #ff9900; font-size: 12px; letter-spacing: 2px; font-weight: bold; }
+  .hist-windows { display: flex; gap: 4px; }
+  .hist-windows button {
+    background: #1a1a1a; color: #888; border: 1px solid #333; border-radius: 4px;
+    font: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer;
+  }
+  .hist-windows button.active { color: #00ddff; border-color: #00ddff; }
+  #chart { width: 100%; height: auto; display: block; }
+  .hist-legend {
+    display: flex; gap: 14px; justify-content: center;
+    margin: 6px 0 10px; font-size: 10px; color: #aaa;
+  }
+  .hist-legend i {
+    display: inline-block; width: 10px; height: 3px;
+    vertical-align: middle; margin-right: 4px; border-radius: 2px;
+  }
+  .hist-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+  .hcard { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 7px 9px; }
+  .hcard .lbl { font-size: 9px; color: #888; letter-spacing: 1px; }
+  .hcard .val { font-size: 15px; font-weight: bold; color: #e0e0e0; margin-top: 2px; }
+
+  /* Pantalla angosta: layout en columna (display arriba, historico abajo) */
+  @media (max-width: 900px) {
+    body { flex-direction: column; align-items: center; }
+    /* En columna no estiramos: mismo ancho que el device (420), centrado */
+    .history { flex: 0 0 auto; width: 100%; max-width: 420px; }
+  }
+
+  /* Banner de estado del proxy (Brave caido / sin sesion / datos viejos) */
+  .banner {
+    width: 100%;
+    order: -1;            /* siempre arriba de todo, ocupa su propia fila */
+    max-width: 1238px;
+    box-sizing: border-box;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  .banner.err { background: #350c0c; color: #ff6b6b; border: 1px solid #ff3333; }
+  .banner.warn { background: #352c0c; color: #ffcc55; border: 1px solid #cc9900; }
 </style>
 </head>
 <body>
+
+<div class="banner" id="banner" style="display:none"></div>
 
 <div class="device">
   <div class="screen">
@@ -251,6 +316,24 @@
       <span id="clock">--:--:--</span>
     </div>
   </div>
+</div>
+
+<div class="history" id="history">
+  <div class="hist-head">
+    <span class="hist-title">HISTORICO</span>
+    <div class="hist-windows">
+      <button data-w="5h">5H</button>
+      <button data-w="24h" class="active">24H</button>
+      <button data-w="7d">7D</button>
+    </div>
+  </div>
+  <canvas id="chart" width="780" height="220"></canvas>
+  <div class="hist-legend">
+    <span><i style="background:#00ddff"></i>5 horas</span>
+    <span><i style="background:#ff9900"></i>7 dias</span>
+    <span><i style="background:#c071ff"></i>extra</span>
+  </div>
+  <div class="hist-cards" id="histCards"></div>
 </div>
 
 <script>
@@ -310,10 +393,32 @@ function renderExtra(e) {
     </div>`;
 }
 
+function setBanner(msg, kind) {
+  const b = document.getElementById('banner');
+  if (!msg) { b.style.display = 'none'; return; }
+  b.textContent = msg;
+  b.className = 'banner ' + (kind || '');
+  b.style.display = 'block';
+}
+
+// Traduce el estado del proxy a un banner (o lo oculta si todo va bien).
+function applyProxyState(p, stale) {
+  p = p || {};
+  if (p.connected === false) return setBanner('⚠ Brave caido — el proxy intenta reconectar', 'err');
+  if (p.sessionValid === false) return setBanner('⚠ Sin sesion en claude.ai — ejecuta ./start.sh --login', 'err');
+  if (stale) return setBanner('⚠ Datos desactualizados — el proxy no pudo refrescar', 'warn');
+  setBanner(null);
+}
+
 async function refresh() {
   try {
     const r = await fetch(PROXY);
-    if (!r.ok) throw new Error(r.status);
+    if (!r.ok) {
+      let info = {};
+      try { info = await r.json(); } catch {}
+      applyProxyState(info.proxy, true);
+      throw new Error(r.status);
+    }
     const d = await r.json(), u = d.usage;
 
     let left = renderRate('5 HORAS', u.five_hour) + renderRate('7 DIAS', u.seven_day);
@@ -339,9 +444,13 @@ async function refresh() {
     let gc = smoothColor(p5);
     let m = gc.match(/\d+/g);
     document.querySelector('.device').style.setProperty('--glow', `rgba(${m[0]},${m[1]},${m[2]},0.25)`);
+
+    applyProxyState(d.proxy, d.stale);
   } catch(e) {
     document.getElementById('statusDot').className = 'status-dot error';
     document.getElementById('statusText').textContent = 'Error';
+    // Si el error no es HTTP (e.message no es un numero), el proxy no responde.
+    if (isNaN(+e.message)) setBanner('⚠ Proxy no responde', 'err');
   }
 }
 
@@ -361,6 +470,96 @@ setInterval(() => {
     else if (stale > 2) el.style.color = '#ffcc00';
   }
 }, 1000);
+
+// ---- HISTORICO ----
+const HCOLORS = { five_hour: '#00ddff', seven_day: '#ff9900', extra_usage: '#c071ff' };
+let histWindow = '24h';
+
+function fmtEta(min) {
+  if (min == null || min < 0) return '-';
+  if (min < 60) return min + 'm';
+  if (min < 1440) return Math.floor(min / 60) + 'h ' + (min % 60) + 'm';
+  const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60);
+  return d + 'd ' + h + 'h';
+}
+function trendArrow(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '▬'; }
+
+// Proyeccion: la ETA al limite (al ritmo actual) es el dato principal. El color
+// dice si llegas a tocarlo (rojo) o si la ventana resetea antes => tranqui (verde).
+function projInfo(m) {
+  const a = trendArrow(m.trend);
+  if (m.etaMin > 0) {
+    return { text: a + ' lim ' + fmtEta(m.etaMin), color: m.hitsLimit ? '#ff6b6b' : '#00cc66' };
+  }
+  return { text: a + ' OK', color: '#5ad17f' };
+}
+
+function drawChart(series) {
+  const c = document.getElementById('chart'), ctx = c.getContext('2d');
+  const W = c.width, H = c.height, padL = 44, padR = 8, padT = 12, padB = 20;
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.fillStyle = '#e6edf3'; ctx.font = 'bold 15px monospace'; ctx.textBaseline = 'middle';
+  for (let p = 0; p <= 100; p += 25) {
+    const y = padT + (1 - p / 100) * (H - padT - padB);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(p + '%', 4, y);
+  }
+
+  let tmin = Infinity, tmax = -Infinity;
+  for (const k in series) for (const pt of series[k]) { if (pt.t < tmin) tmin = pt.t; if (pt.t > tmax) tmax = pt.t; }
+  if (!isFinite(tmin)) {
+    ctx.fillStyle = '#a8b4c0';
+    ctx.fillText('Sin datos aun - el historico se llena con el tiempo', padL + 10, H / 2);
+    return;
+  }
+  const span = Math.max(1, tmax - tmin);
+  const X = t => padL + ((t - tmin) / span) * (W - padL - padR);
+  const Y = v => padT + (1 - v / 100) * (H - padT - padB);
+  for (const k in series) {
+    const pts = series[k]; if (!pts.length) continue;
+    ctx.strokeStyle = HCOLORS[k]; ctx.lineWidth = 2; ctx.beginPath();
+    pts.forEach((pt, i) => { const x = X(pt.t), y = Y(pt.v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+}
+
+function fillCards(sum, warn) {
+  const m = sum.five_hour || {};
+  const w = sum.seven_day || {};
+  const p5 = projInfo(m), pw = projInfo(w);
+  const cards = [
+    ['PICO 5H', m.peak == null ? '-' : m.peak + '%', null],
+    ['PROMEDIO 5H', m.avg == null ? '-' : m.avg + '%', null],
+    ['EN ROJO ≥' + (warn || 80) + '%', Math.round((m.redZoneFrac || 0) * 100) + '%', null],
+    ['PROY. 5H', p5.text, p5.color],
+    ['PROY. SEMANA', pw.text, pw.color],
+  ];
+  document.getElementById('histCards').innerHTML = cards.map(([l, v, c]) =>
+    `<div class="hcard"><div class="lbl">${l}</div><div class="val"${c ? ` style="color:${c}"` : ''}>${v}</div></div>`).join('');
+}
+
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/history?window=' + histWindow + '&points=120');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    drawChart(d.series);
+    fillCards(d.summary, d.warn);
+  } catch (e) { /* el proxy puede no tener historico todavia */ }
+}
+
+document.querySelectorAll('.hist-windows button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.hist-windows button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    histWindow = b.dataset.w;
+    loadHistory();
+  });
+});
+loadHistory();
+setInterval(loadHistory, REFRESH);
 </script>
 </body>
 </html>

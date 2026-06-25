@@ -1,9 +1,11 @@
-const { fetchFromClaude } = require('./browser');
+const { fetchFromClaude, getStatus } = require('./browser');
+const history = require('./history');
 
 let cachedOrg = null;
 let cachedUsage = null;
 let lastFetch = 0;
 const CACHE_TTL = 60_000;
+const STALE_MS = 180_000; // datos viejos si no se refrescan hace > 3 min
 
 async function refresh() {
   const now = Date.now();
@@ -28,6 +30,12 @@ async function refresh() {
   const d7 = usage.seven_day?.utilization || 0;
   const ex = usage.extra_usage?.utilization || 0;
   console.log(`OK — 5h: ${h5}% | 7d: ${d7}% | extra: ${ex}%`);
+
+  history.record({
+    h5,
+    d7,
+    ex: usage.extra_usage?.is_enabled ? ex : null,
+  });
 }
 
 function getData() {
@@ -35,6 +43,8 @@ function getData() {
     org: cachedOrg ? { name: cachedOrg.name, plan: cachedOrg.rate_limit_tier } : null,
     usage: cachedUsage,
     cached_at: lastFetch,
+    proxy: getStatus(),
+    stale: lastFetch > 0 ? Date.now() - lastFetch > STALE_MS : true,
   };
 }
 
