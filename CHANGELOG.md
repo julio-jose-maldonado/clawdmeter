@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.11.1] - 2026-06-27
+
+### Added
+- CI (GitHub Actions, `.github/workflows/ci.yml`): en cada push/PR compila el firmware con arduino-cli (ESP32-S3) via `arduino/compile-sketches`, hace `node --check` del proxy + scripts inline de la PWA, y lo lintea con **oxlint**
+
 ## [2.11.0] - 2026-06-27
 
 ### Added
