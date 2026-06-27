@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  firmware:
+    name: Compilar firmware (ESP32-S3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          fqbn: "esp32:esp32:esp32s3:PSRAM=opi,FlashSize=16M"
+          platforms: |
+            - name: esp32:esp32
+              source-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          libraries: |
+            - name: ArduinoJson
+            - name: WiFiManager
+            - name: Adafruit NeoPixel
+            - name: TFT_eSPI
+          sketch-paths: |
+            - firmware/Clawdmeter
+
+  proxy:
+    name: Chequeo del proxy (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax check (JS del proxy + scripts de la PWA)
+        working-directory: proxy
+        run: |
+          for f in server.js lib/*.js; do
+            echo "check $f"
+            node --check "$f"
+          done
+          for h in public/index.html public/config.html; do
+            echo "check script inline de $h"
+            node -e "const fs=require('fs');const x=fs.readFileSync('$h','utf8');const m=x.match(/<script>([\s\S]*?)<\/script>/);fs.writeFileSync('/tmp/pwa.js',m?m[1]:'');"
+            node --check /tmp/pwa.js
+          done
