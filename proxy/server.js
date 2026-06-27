@@ -3,13 +3,12 @@ const path = require('node:path');
 const browser = require('./lib/browser');
 const usage = require('./lib/usage');
 const history = require('./lib/history');
+const config = require('./lib/config');
+const backup = require('./lib/backup');
 
 const PORT = Number.parseInt(process.env.PROXY_PORT || '3456');
 const SAMPLE_MS = 60_000; // muestreo continuo del histórico
-const WARN_THRESHOLD = (() => {
-  const v = Number.parseInt(process.env.WARN_THRESHOLD);
-  return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 80; // % "zona roja", default 80
-})();
+const BACKUP_MS = 24 * 60 * 60 * 1000; // backup diario de las DBs
 
 // Parseo de ventanas tipo "5h", "24h", "7d" -> milisegundos
 function parseWindow(str, def) {
@@ -30,10 +29,23 @@ function resetMsFor(metric) {
   return Number.isFinite(t) ? t : null;
 }
 
+// Basic Auth solo para /api/config (lectura y escritura de los ajustes).
+function requireConfigAuth(req, res, next) {
+  const m = /^Basic (.+)$/.exec(req.headers.authorization || '');
+  if (m) {
+    const [u, p] = Buffer.from(m[1], 'base64').toString().split(':');
+    if (u === config.get().config_user && config.checkPassword(p)) return next();
+  }
+  // 401 SIN WWW-Authenticate a proposito: con ese header, Brave/Chrome muestran su
+  // diálogo nativo de login en vez de dejar que la PWA use su propio formulario.
+  return res.status(401).json({ error: 'auth required' });
+}
+
 const app = express();
 // Sin CORS abierto a proposito: la PWA es same-origin (la sirve este mismo proxy)
 // y el ESP32 no es un browser. Asi ninguna web externa puede leer estos endpoints.
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json()); // body de POST /api/config
 
 app.get('/api/usage', async (req, res) => {
   try {
@@ -68,8 +80,8 @@ app.get('/health', (_, res) => {
 app.get('/api/history', (req, res) => {
   const windowMs = parseWindow(req.query.window, 24 * 3600000);
   const points = clamp(Number.parseInt(req.query.points), 10, 500, 120);
-  // Si la query no trae warn, usa el umbral configurado (WARN_THRESHOLD del .env).
-  const warn = clamp(Number.parseInt(req.query.warn), 1, 100, WARN_THRESHOLD);
+  // Si la query no trae warn, usa el umbral de la config (warn_threshold).
+  const warn = clamp(Number.parseInt(req.query.warn), 1, 100, config.get().warn_threshold);
   const resets = {
     five_hour: resetMsFor('five_hour'),
     seven_day: resetMsFor('seven_day'),
@@ -94,12 +106,27 @@ app.get('/api/history/sparkline', (req, res) => {
   res.json(history.sparkline(metric, windowMs, points, resetMsFor(metric)));
 });
 
+// Configuración centralizada: el ESP32 la baja al arrancar y la PWA la edita.
+// El bootstrap (WiFi + IP/puerto del proxy) NO está acá: vive en el ESP32.
+// Nunca devolvemos el hash del password al cliente.
+const publicConfig = (c) => { const { config_pass, ...rest } = c; return rest; };
+app.get('/api/config', requireConfigAuth, (_, res) => res.json(publicConfig(config.get())));
+app.post('/api/config', requireConfigAuth, (req, res) => {
+  try {
+    res.json(publicConfig(config.update(req.body)));
+  } catch (e) { res.status(400).json({ error: e.message }); }
+});
+
 (async () => {
   history.load();
+  config.load();
   await browser.init();
   await usage.refresh();
   // Muestreo continuo: el histórico sigue creciendo aunque nadie mire la app.
   setInterval(() => { usage.refresh().catch(() => {}); }, SAMPLE_MS);
+  // Backup de las DBs (fuera del proyecto): al arrancar y una vez por día.
+  backup.backupNow().catch((e) => console.error('Backup inicial falló:', e.message));
+  setInterval(() => { backup.backupNow().catch(() => {}); }, BACKUP_MS);
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`\nClawdmeter proxy en http://localhost:${PORT}/api/usage`);
     console.log(`Clawdmeter app en http://localhost:${PORT}/\n`);

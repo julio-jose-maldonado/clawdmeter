@@ -293,6 +293,11 @@
   }
   .banner.err { background: #350c0c; color: #ff6b6b; border: 1px solid #ff3333; }
   .banner.warn { background: #352c0c; color: #ffcc55; border: 1px solid #cc9900; }
+
+  /* --- Link a la pagina de configuracion --- */
+  .cfg-link { width: 100%; order: 3; text-align: center; }
+  .cfg-link a { color: #00ddff; font-size: 12px; text-decoration: none; opacity: 0.8; }
+  .cfg-link a:hover { opacity: 1; text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -335,6 +340,8 @@
   </div>
   <div class="hist-cards" id="histCards"></div>
 </div>
+
+<div class="cfg-link"><a href="/config.html">&#9881; Configuracion</a></div>
 
 <script>
 const PROXY = '/api/usage';
@@ -489,7 +496,8 @@ function trendArrow(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '▬
 function projInfo(m) {
   const a = trendArrow(m.trend);
   if (m.etaMin > 0) {
-    return { text: a + ' lim ' + fmtEta(m.etaMin), color: m.hitsLimit ? '#ff6b6b' : '#00cc66' };
+    // sube: rojo si tocas el limite antes del reset, ambar si resetea antes (sube pero ok)
+    return { text: a + ' lim ' + fmtEta(m.etaMin), color: m.hitsLimit ? '#ff6b6b' : '#ffaa33' };
   }
   return { text: a + ' OK', color: '#5ad17f' };
 }

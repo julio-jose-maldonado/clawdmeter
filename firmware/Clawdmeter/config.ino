@@ -8,6 +8,8 @@ void loadConfig() {
   config.flip_screen = prefs.getBool("flip", false);
   strlcpy(config.timezone, prefs.getString("timezone", "ART3").c_str(), sizeof(config.timezone));
   strlcpy(config.admin_pass, prefs.getString("admin_pass", "clawdmeter").c_str(), sizeof(config.admin_pass));
+  strlcpy(config.proxy_user, prefs.getString("proxy_user", "admin").c_str(), sizeof(config.proxy_user));
+  strlcpy(config.proxy_pass, prefs.getString("proxy_pass", "clawdmeter").c_str(), sizeof(config.proxy_pass));
   config.lat = prefs.getFloat("lat", 0.0f);
   config.lon = prefs.getFloat("lon", 0.0f);
   strlcpy(config.city, prefs.getString("city", "").c_str(), sizeof(config.city));
@@ -33,6 +35,8 @@ void saveConfig() {
   prefs.putBool("flip", config.flip_screen);
   prefs.putString("timezone", config.timezone);
   prefs.putString("admin_pass", config.admin_pass);
+  prefs.putString("proxy_user", config.proxy_user);
+  prefs.putString("proxy_pass", config.proxy_pass);
   prefs.putFloat("lat", config.lat);
   prefs.putFloat("lon", config.lon);
   prefs.putString("city", config.city);
@@ -46,4 +50,11 @@ void saveConfig() {
   prefs.putUChar("night_end", config.night_end_hour);
   prefs.putUChar("night_bright", config.night_brightness);
   prefs.end();
+}
+
+// Aplica en caliente los ajustes con efecto visible/temporal (tras bajar config).
+void applyConfig() {
+  tft.setRotation(config.flip_screen ? 3 : 1);
+  applyBacklight();  // brillo dia/noche segun lcd_brightness/night_*
+  configTzTime(config.timezone, "pool.ntp.org", "time.google.com");
 }

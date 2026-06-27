@@ -11,9 +11,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "better-sqlite3": "^11.8.1",
-    "express": "^5.2.1",
-    "playwright": "^1.60.0"
+    "bcryptjs": "2.4.3",
+    "better-sqlite3": "11.8.1",
+    "express": "5.2.1",
+    "playwright": "1.60.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["better-sqlite3"]

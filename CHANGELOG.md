@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.11.0] - 2026-06-27
+
+### Added
+- Configuracion centralizada en el proxy: `lib/config.js` (SQLite `data/config.db`) guarda todos los ajustes de comportamiento. Endpoints `GET/POST /api/config` con Basic Auth (usuario + contrasena hasheada con bcrypt, cambiables desde la UI). Pagina dedicada `public/config.html` (login con ojo ver/ocultar, dropdown de zona horaria, buscador de ciudad, panel Seguridad, cerrar sesion); el dashboard la linkea
+- El ESP32 baja la config del proxy: `fetchConfig()` (Basic-Auth GET `/api/config`) al arrancar y cada 5 min, la valida/clampea, la cachea en NVS y la aplica (`applyConfig`). Funciona offline con los defaults/cache de NVS. Campos `proxy_user`/`proxy_pass` en el bootstrap
+- Sistema de backups: `lib/backup.js` — backup online de SQLite (`history.db` + `config.db`) a `~/Library/Application Support/clawdmeter/backups/` (fuera del proyecto, sobrevive borrar `data/`), al arrancar + diario, rotando 14, con CLI `now|list|restore`
+
+### Changed
+- El web config del ESP32 (`http://clawdmeter.local`) se achico a solo bootstrap (WiFi + IP/puerto/credenciales del proxy + admin pass); el resto de los ajustes van por la PWA. Sus forms pasan a POST (la contrasena ya no viaja en la URL)
+- Los LEDs de proyeccion (5h/7d) y las cards de proyeccion de la PWA usan el mismo criterio de 3 colores (verde/ambar/rojo)
+- `WARN_THRESHOLD` salio del `.env`: ahora es parte de la config
+
+### Security
+- La contrasena de la config se guarda hasheada con bcrypt (no en texto plano) y nunca se devuelve por la API
+
 ## [2.10.0] - 2026-06-25
 
 ### Added

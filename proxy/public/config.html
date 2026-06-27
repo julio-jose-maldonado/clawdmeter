@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<title>Clawdmeter - Config</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--accent:#00ddff;--text:#f1f5f9;--muted:#94a3b8;--border:#334155}
+  *{box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:20px}
+  .c{max-width:480px;margin:0 auto}
+  h1{color:var(--accent);text-align:center;font-size:1.8rem;letter-spacing:3px;margin-bottom:5px}
+  .sub{text-align:center;color:var(--muted);font-size:.85rem;margin-bottom:20px}
+  .panel{background:var(--card);padding:20px;border-radius:12px;border:1px solid var(--border);margin-bottom:16px}
+  .panel h2{color:var(--accent);font-size:1rem;margin:0 0 15px}
+  label{display:block;margin-top:12px;font-weight:600;font-size:.9rem}
+  input[type=text],input[type=password],input[type=number],select{width:100%;padding:10px;margin-top:4px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:15px}
+  input:focus,select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(0,221,255,.2)}
+  .pw-wrap{position:relative;margin-top:4px}
+  .pw-wrap input{margin-top:0;padding-right:44px}
+  .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:auto;margin:0;padding:6px;display:flex;align-items:center;background:transparent;border:none;color:var(--muted);cursor:pointer;opacity:.9}
+  .pw-eye:hover{opacity:1;background:transparent;color:var(--accent)}
+  .pw-eye svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+  .range-row{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .range-row input[type=range]{flex:1;accent-color:var(--accent)}
+  .range-val{min-width:36px;text-align:right;font-family:monospace;color:var(--accent)}
+  .check{margin-top:16px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.9rem}
+  .check input{width:18px;height:18px;accent-color:var(--accent)}
+  button{background:var(--accent);color:#0f172a;padding:14px;border:none;border-radius:8px;cursor:pointer;width:100%;font-size:1.1rem;font-weight:700;margin-top:10px}
+  button:hover{opacity:.9}
+  .help{font-size:.8rem;color:var(--muted);margin-top:4px}
+  .status{text-align:center;padding:12px;border-radius:8px;margin-bottom:16px;font-size:.9rem}
+  .status.ok{background:rgba(0,221,255,.08);border:1px solid var(--accent);color:var(--accent)}
+  .status.err{background:rgba(239,68,68,.12);border:1px solid #ef4444;color:#fca5a5}
+  .row2{display:flex;gap:8px;align-items:flex-end}
+  .back{display:block;text-align:center;margin-top:14px;color:var(--muted);font-size:.85rem;text-decoration:none}
+  .back:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>CLAWDMETER</h1>
+  <div class="sub">Configuracion</div>
+
+  <div id="login" class="panel" style="display:none">
+    <h2>Ingresar</h2>
+    <label>Usuario</label><input type="text" id="u" autocomplete="username">
+    <label>Contrasena</label>
+    <div class="pw-wrap"><input type="password" id="p" autocomplete="current-password"><button type="button" class="pw-eye" data-for="p" aria-label="Mostrar contrasena"></button></div>
+    <button id="loginBtn">Entrar</button>
+    <div class="help" id="loginMsg"></div>
+    <a href="/" class="back">&larr; Volver al dashboard</a>
+  </div>
+
+  <div id="form" style="display:none">
+
+    <div class="panel"><h2>Pantalla</h2>
+      <label>Intervalo de refresco (segundos)</label>
+      <input type="number" id="refresh_sec" data-cfg min="10" max="3600">
+
+      <label>Brillo LCD</label>
+      <div class="range-row"><input type="range" id="lcd_brightness" data-cfg min="0" max="255"
+        oninput="document.getElementById('lcd_brightness_val').textContent=this.value">
+        <span class="range-val" id="lcd_brightness_val"></span></div>
+
+      <label>Brillo LEDs</label>
+      <div class="range-row"><input type="range" id="led_brightness" data-cfg min="0" max="255"
+        oninput="document.getElementById('led_brightness_val').textContent=this.value">
+        <span class="range-val" id="led_brightness_val"></span></div>
+      <div class="help">0 = LEDs apagados</div>
+
+      <label>Volver a pantalla principal (segundos)</label>
+      <input type="number" id="home_timeout_sec" data-cfg min="0" max="3600">
+      <div class="help">Tras este tiempo sin tocar el boton, vuelve a la pantalla de uso. 0 = nunca</div>
+
+      <label class="check"><input type="checkbox" id="flip_screen" data-cfg> Invertir pantalla 180&deg;</label>
+
+      <label>Zona horaria</label>
+      <select id="timezone" data-cfg>
+        <option value="ART3">Argentina (UTC-3)</option>
+        <option value="UTC0">UTC</option>
+        <option value="EST5EDT,M3.2.0,M11.1.0">US Eastern (UTC-5/-4)</option>
+        <option value="CST6CDT,M3.2.0,M11.1.0">US Central (UTC-6/-5)</option>
+        <option value="MST7MDT,M3.2.0,M11.1.0">US Mountain (UTC-7/-6)</option>
+        <option value="PST8PDT,M3.2.0,M11.1.0">US Pacific (UTC-8/-7)</option>
+        <option value="BRT3">Brasil (UTC-3)</option>
+        <option value="CLT4CLST,M8.2.6/24,M5.2.6/24">Chile (UTC-4/-3)</option>
+        <option value="COT5">Colombia (UTC-5)</option>
+        <option value="CST6">Mexico Centro (UTC-6)</option>
+        <option value="CET-1CEST,M3.5.0,M10.5.0/3">Europa Central (UTC+1/+2)</option>
+        <option value="GMT0BST,M3.5.0/1,M10.5.0">UK (UTC+0/+1)</option>
+      </select>
+    </div>
+
+    <div class="panel"><h2>Noche</h2>
+      <label class="check"><input type="checkbox" id="night_dim_enabled" data-cfg> Atenuar pantalla de noche</label>
+      <div class="help">Baja el brillo de la LCD en el rango horario (segun la zona horaria)</div>
+      <div class="range-row" style="gap:6px;margin-top:12px">
+        <span style="font-size:.85rem">De</span>
+        <input type="number" id="night_start_hour" data-cfg min="0" max="23" style="width:80px">
+        <span style="font-size:.85rem">a</span>
+        <input type="number" id="night_end_hour" data-cfg min="0" max="23" style="width:80px">
+        <span style="font-size:.85rem">hs</span>
+      </div>
+      <label>Brillo nocturno</label>
+      <div class="range-row"><input type="range" id="night_brightness" data-cfg min="5" max="255"
+        oninput="document.getElementById('night_brightness_val').textContent=this.value">
+        <span class="range-val" id="night_brightness_val"></span></div>
+    </div>
+
+    <div class="panel"><h2>Alertas</h2>
+      <label class="check"><input type="checkbox" id="alerts_enabled" data-cfg> Alertas sonoras activadas</label>
+      <div class="help">Beep + parpadeo del LED cuando el uso (5h o 7 dias) cruza un umbral</div>
+      <label>Umbral de aviso (%)</label>
+      <input type="number" id="warn_threshold" data-cfg min="1" max="100">
+      <label>Umbral critico (%)</label>
+      <input type="number" id="crit_threshold" data-cfg min="1" max="100">
+      <label>GPIO del buzzer</label>
+      <input type="number" id="buzzer_pin" data-cfg min="0" max="48">
+      <div class="help">Buzzer pasivo (PWM). 0 = sin sonido (solo parpadeo). Pines seguros: 11, 12, 13, 14, 21.</div>
+    </div>
+
+    <div class="panel"><h2>Clima</h2>
+      <label>Ciudad</label>
+      <div class="row2">
+        <input type="text" id="city" data-cfg placeholder="Ej: Bahia Blanca">
+        <button type="button" id="buscarBtn" style="width:auto;padding:10px 16px;margin-top:4px;font-size:.9rem">Buscar</button>
+      </div>
+      <div class="help" id="cityres">Busca la ciudad y completa lat/lon automaticamente (Open-Meteo, sin API key)</div>
+      <label>Latitud</label><input type="text" id="lat" data-cfg>
+      <label>Longitud</label><input type="text" id="lon" data-cfg>
+      <div class="help">Tambien se pueden cargar a mano. Ambos en 0 = pantalla de clima desactivada.</div>
+    </div>
+
+    <div class="panel"><h2>Seguridad</h2>
+      <label>Usuario</label>
+      <input type="text" id="config_user" data-cfg autocomplete="off">
+      <label>Nueva contrasena</label>
+      <div class="pw-wrap"><input type="password" id="config_pass" data-cfg autocomplete="new-password" placeholder="(vacio = no cambiar)"><button type="button" class="pw-eye" data-for="config_pass" aria-label="Mostrar contrasena"></button></div>
+      <div class="help">Con esto entras a esta pagina. Cambiala del default (admin / clawdmeter). Se guarda hasheada con bcrypt.</div>
+    </div>
+
+    <button id="save">Guardar</button>
+    <div id="msg" class="status" style="display:none;margin-top:10px;margin-bottom:0"></div>
+    <a href="#" id="logout" class="back">Cerrar sesion</a>
+    <a href="/" class="back">&larr; Volver al dashboard</a>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+function authVal() { return sessionStorage.getItem('cfgAuth'); }
+function headers(extra) { const a = authVal(); return Object.assign(a ? { Authorization: 'Basic ' + a } : {}, extra || {}); }
+function show(which) { $('login').style.display = which === 'login' ? 'block' : 'none'; $('form').style.display = which === 'form' ? 'block' : 'none'; }
+
+function populate(cfg) {
+  for (const k in cfg) {
+    const el = $(k); if (!el) continue;
+    if (el.type === 'checkbox') el.checked = !!cfg[k];
+    else el.value = cfg[k];
+    const v = $(k + '_val'); if (v) v.textContent = cfg[k];
+  }
+}
+function collect() {
+  const patch = {};
+  document.querySelectorAll('[data-cfg]').forEach(el => { patch[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+  return patch;
+}
+function setMsg(text, ok) {
+  const m = $('msg'); m.textContent = text; m.className = 'status ' + (ok ? 'ok' : 'err'); m.style.display = 'block';
+  if (ok) setTimeout(() => { m.style.display = 'none'; }, 3500);
+}
+
+async function load() {
+  let r;
+  try { r = await fetch('/api/config', { headers: headers() }); }
+  catch (e) { show('login'); return; }
+  // Cualquier respuesta que no sea 200 (401 sin auth, o 404 si el proxy esta
+  // viejo y aun no tiene /api/config) -> mostramos el login, nunca el form.
+  if (!r.ok) { show('login'); return; }
+  show('form');
+  try { populate(await r.json()); } catch (e) { /* ignore */ }
+}
+
+async function doLogin() {
+  sessionStorage.setItem('cfgAuth', btoa($('u').value + ':' + $('p').value));
+  let r;
+  try { r = await fetch('/api/config', { headers: headers() }); }
+  catch (e) { $('loginMsg').textContent = 'Sin conexion'; return; }
+  if (r.status === 401) { sessionStorage.removeItem('cfgAuth'); $('loginMsg').textContent = 'Credenciales invalidas'; return; }
+  $('loginMsg').textContent = ''; show('form');
+  try { populate(await r.json()); } catch (e) { /* ignore */ }
+}
+
+async function save() {
+  const newUser = $('config_user').value;
+  const newPass = $('config_pass').value;
+  let r;
+  try { r = await fetch('/api/config', { method: 'POST', headers: headers({ 'content-type': 'application/json' }), body: JSON.stringify(collect()) }); }
+  catch (e) { setMsg('Sin conexion', false); return; }
+  if (r.status === 401) { show('login'); return; }
+  if (r.ok) {
+    // si cambiaron usuario/contrasena, actualizamos la sesion para no quedar afuera
+    const old = authVal() ? atob(authVal()) : ':';
+    const oldPass = old.slice(old.indexOf(':') + 1);
+    sessionStorage.setItem('cfgAuth', btoa(newUser + ':' + (newPass || oldPass)));
+    $('config_pass').value = '';
+    populate(await r.json());
+    setMsg('Guardado ✓', true);
+  } else setMsg('Error al guardar', false);
+}
+
+async function buscarCiudad() {
+  const q = $('city').value.trim();
+  const res = $('cityres');
+  if (!q) { res.textContent = 'Escribi una ciudad primero'; return; }
+  res.textContent = 'Buscando...';
+  try {
+    const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=es');
+    const j = await r.json();
+    if (!j.results || !j.results.length) { res.textContent = 'Ciudad no encontrada'; return; }
+    const c = j.results[0];
+    $('lat').value = c.latitude;
+    $('lon').value = c.longitude;
+    $('city').value = c.name;
+    res.textContent = c.name + (c.admin1 ? ', ' + c.admin1 : '') + (c.country ? ', ' + c.country : '') + ' — guarda para aplicar';
+  } catch (e) { res.textContent = 'Error: ' + e.message; }
+}
+
+const EYE = '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+document.querySelectorAll('.pw-eye').forEach(b => {
+  b.innerHTML = EYE;
+  b.addEventListener('click', () => {
+    const el = $(b.dataset.for);
+    const showing = el.type === 'password';
+    el.type = showing ? 'text' : 'password';
+    b.innerHTML = showing ? EYE_OFF : EYE;
+  });
+});
+$('loginBtn').addEventListener('click', doLogin);
+$('save').addEventListener('click', save);
+$('buscarBtn').addEventListener('click', buscarCiudad);
+$('logout').addEventListener('click', e => {
+  e.preventDefault();
+  sessionStorage.removeItem('cfgAuth');
+  $('u').value = ''; $('p').value = '';
+  show('login');
+});
+load();
+</script>
+</body>
+</html>
