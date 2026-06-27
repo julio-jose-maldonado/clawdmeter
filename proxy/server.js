@@ -109,7 +109,7 @@ app.get('/api/history/sparkline', (req, res) => {
 // Configuración centralizada: el ESP32 la baja al arrancar y la PWA la edita.
 // El bootstrap (WiFi + IP/puerto del proxy) NO está acá: vive en el ESP32.
 // Nunca devolvemos el hash del password al cliente.
-const publicConfig = (c) => { const { config_pass, ...rest } = c; return rest; };
+const publicConfig = (c) => { const { config_pass: _hash, ...rest } = c; return rest; };
 app.get('/api/config', requireConfigAuth, (_, res) => res.json(publicConfig(config.get())));
 app.post('/api/config', requireConfigAuth, (req, res) => {
   try {

@@ -48,3 +48,7 @@ jobs:
             node -e "const fs=require('fs');const x=fs.readFileSync('$h','utf8');const m=x.match(/<script>([\s\S]*?)<\/script>/);fs.writeFileSync('/tmp/pwa.js',m?m[1]:'');"
             node --check /tmp/pwa.js
           done
+
+      - name: Lint (oxlint)
+        working-directory: proxy
+        run: npx --yes oxlint@latest server.js lib
