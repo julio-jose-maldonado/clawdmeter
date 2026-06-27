@@ -83,6 +83,8 @@ struct Config {
   bool flip_screen;
   char timezone[48];
   char admin_pass[32];
+  char proxy_user[32];      // usuario para /api/config del proxy (Basic Auth)
+  char proxy_pass[32];      // contrasena para /api/config del proxy
   float lat;
   float lon;
   char city[40];
@@ -172,6 +174,9 @@ const unsigned long WEATHER_TTL_MS = 15UL * 60UL * 1000UL;
 TrendData trend;
 bool trendValid = false;
 
+unsigned long lastConfigFetch = 0;
+const unsigned long CONFIG_TTL_MS = 5UL * 60UL * 1000UL;  // re-baja la config del proxy cada 5 min
+
 // ---- SETUP ----
 void setup() {
   Serial.begin(115200);
@@ -203,6 +208,8 @@ void setup() {
   delay(1500);
 
   connectWiFi();
+  fetchConfig();             // baja la config del proxy (sobreescribe la NVS si esta disponible)
+  lastConfigFetch = millis();
   syncTime();
   setupWebServer();
 
@@ -236,6 +243,11 @@ void loop() {
     if (fetchTrend()) trendValid = true;  // conserva el ultimo bueno si falla
     drawScreen();
     lastRefresh = millis();
+  }
+
+  if (millis() - lastConfigFetch >= CONFIG_TTL_MS) {
+    if (fetchConfig()) drawScreen();  // re-baja config y refleja cambios (flip, etc.)
+    lastConfigFetch = millis();
   }
 
   refreshWeatherIfDue();

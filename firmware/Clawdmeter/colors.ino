@@ -64,8 +64,8 @@ uint16_t tempColor(float t) {
 // Tira externa de 3 WS2812B: 5h y 7d muestran la PROYECCION (no el uso crudo),
 // el extra muestra la SALUD del sistema. Todo con fade suave por hue (ver tickExtLeds).
 
-// Tono objetivo de un LED de proyeccion:
-// rojo = toca el limite antes del reset; ambar = subiendo (resetea a tiempo);
+// Tono objetivo de un LED de proyeccion (mismo criterio que la PWA):
+// rojo = tocas el limite antes del reset; ambar = subiendo pero resetea a tiempo;
 // verde = estable/bajando o sin proyeccion.
 float projHue(bool hits, bool rising) {
   if (hits)   return HUE_LED_RED;

@@ -53,7 +53,8 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
     ├── screen_trend.ino         # Pantalla TENDENCIA (sparkline 5h + proyeccion)
     ├── screen_clock.ino         # Pantalla FECHA Y HORA
     ├── screen_weather.ino       # Pantalla CLIMA
-    ├── network.ino              # WiFi, NTP, fetch de datos con reintentos
+    ├── network.ino              # WiFi (portal de config), NTP, helper de tiempo
+    ├── fetch.ino                # Pedidos al proxy: config, tendencia, uso
     ├── touch.ino                # Boton touch (cambio de pantalla)
     ├── weather.ino              # Clima (Open-Meteo)
     └── webconfig.ino            # Web server de configuracion
@@ -64,7 +65,7 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 - **Board:** Waveshare ESP32-S3 LCD 1.47" (version B)
 - **Display:** ST7789, 172x320px (landscape)
 - **LED integrado:** WS2812 (GPIO38) — efecto ambiental con cambio fluido de color
-- **Tira externa:** 3x WS2812B encadenados (GPIO2) — muestran *estado* con fade suave: LED 5h y 7d = **proyeccion** (verde ok / ambar subiendo / rojo vas a tocar el limite), LED extra = **salud del sistema** (verde fresco / ambar viejo / rojo caido)
+- **Tira externa:** 3x WS2812B encadenados (GPIO2) — muestran *estado* con fade suave: LED 5h y 7d = **proyeccion** (verde = ok / ambar = subiendo pero resetea a tiempo / rojo = tocas el limite antes del reset, igual que la PWA), LED extra = **salud del sistema** (verde fresco / ambar viejo / rojo caido)
 - **Boton touch:** TTP223 (GPIO10) — toque corto: cambia de pantalla (uso / tendencia / reloj+clima); toque largo (~1s): gira la pantalla 180°
 - **Buzzer (opcional):** pasivo (GPIO11 por defecto, configurable) — beep al cruzar umbrales de uso
 
@@ -175,18 +176,24 @@ Muestra los mismos datos que el ESP32 mas un **historico**: grafico de tendencia
 | Buzzer | Beep + parpadeo al cruzar umbral de aviso (~80%) o critico (~95%) en 5h, 7 dias y extra. Tono distinto por metrica (grave/medio/agudo), 1 beep=aviso, 2=critico |
 | Inicio | Self-test al bootear: barrido de los 3 LEDs con el tono de cada alerta (verifica tira + buzzer) |
 
-## Configuracion del ESP32
+## Configuracion
 
-Acceder a `http://clawdmeter.local` desde cualquier dispositivo en la misma red:
+La configuracion esta dividida en dos lugares:
 
+**Bootstrap — en el ESP32** (`http://clawdmeter.local`, usuario `admin`):
+- WiFi (portal AP "Clawdmeter-Setup")
 - IP y puerto del proxy
-- Intervalo de refresco
-- Brillo LCD y LED
-- Invertir pantalla 180°
-- Zona horaria
-- Atenuacion nocturna: rango horario + brillo reducido de la LCD
-- Alertas: on/off, umbrales de aviso/critico y GPIO del buzzer
-- Password de admin
+- Usuario y contrasena del proxy (para bajar la config)
+- Password de admin de esta pagina
+- Resetear WiFi
+
+**Comportamiento — en la PWA** (`http://<IP-del-proxy>:3456/config.html`, login propio):
+- Intervalo de refresco, brillo LCD/LEDs, invertir pantalla, zona horaria
+- Atenuacion nocturna (rango horario + brillo)
+- Alertas: on/off, umbrales de aviso/critico, GPIO del buzzer
+- Clima: ciudad (con buscador) o lat/lon a mano
+
+El ESP32 **baja estos ajustes del proxy** al arrancar y cada 5 min, y los **cachea en NVS** — asi funciona offline con lo ultimo conocido. Las credenciales del proxy (usuario/contrasena) y la zona roja se guardan hasheadas/centralizadas en el proxy.
 
 ## Por que un browser?
 
