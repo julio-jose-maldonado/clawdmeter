@@ -10,281 +10,102 @@
 <link rel="icon" href="/icon.svg">
 <title>Clawdmeter</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ============ Tokens de tema ============ */
+  :root {
+    --page-bg: #0b0b0b;
+    --page-glow: #171717;
+    --bez-bg: linear-gradient(180deg,#0a0a0a,#000);
+    --bez-border: #2a2a2a;
+    --bez-shadow: 0 0 50px var(--glow, rgba(0,221,255,0.12)), inset 0 1px 0 rgba(255,255,255,0.05);
+    --screen-bg: #000;
+    --scan: rgba(0,0,0,0.22);
+    --bar-bg: #0d1518;
+    --accent-border: #ff9900;
+    --title: #00ddff;
+    --title-shadow: 0 0 8px rgba(0,221,255,0.5);
+    --sec: #58a8b8;
+    --text: #cfeef5;
+    --label: #ff9900;
+    --divider: #143844;
+    --track-border: #2c545e;
+    --track-bg: #02090b;
+    --tick: rgba(0,0,0,1);
+    --thr: #ff3333;
+    --live: #00cc44;
+    --live-glow: 0 0 6px #00cc44;
+    --mascot: #D97757;
+    --btn-bg: rgba(0,221,255,0.08);
+    --btn-fg: #00ddff;
+    --btn-hover: rgba(0,221,255,0.2);
+    --input-bg: #02090b;
+    --input-border: #2c545e;
+    --accent: #00ddff;
+    --save-fg: #ff9900;
+    --save-bg: rgba(255,153,0,0.1);
+    --save-hover: rgba(255,153,0,0.25);
+    --err: #ff6b6b;
+    --warn-c: #ffcc55;
+  }
+  [data-theme="light"] {
+    --page-bg: #b9b6ad;
+    --page-glow: #ccc9c0;
+    --bez-bg: linear-gradient(180deg,#dcd9d1,#c9c6bd);
+    --bez-border: #b0ada2;
+    --bez-shadow: 0 14px 34px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+    --screen-bg: #e7ece4;
+    --scan: rgba(20,50,45,0.05);
+    --bar-bg: #d5ddd3;
+    --accent-border: #d97b00;
+    --title: #00708a;
+    --title-shadow: none;
+    --sec: #4a7c8a;
+    --text: #16303a;
+    --label: #b36b00;
+    --divider: #b9c6bd;
+    --track-border: #9fb3ac;
+    --track-bg: #d5ddd3;
+    --tick: #d5ddd3;
+    --thr: #bb2222;
+    --live: #1d8a43;
+    --live-glow: 0 0 5px rgba(29,138,67,0.6);
+    --mascot: #C05F3C;
+    --btn-bg: rgba(0,112,138,0.08);
+    --btn-fg: #00708a;
+    --btn-hover: rgba(0,112,138,0.18);
+    --input-bg: #f2f5f0;
+    --input-border: #9fb3ac;
+    --accent: #00708a;
+    --save-fg: #b36b00;
+    --save-bg: rgba(179,107,0,0.08);
+    --save-hover: rgba(179,107,0,0.18);
+    --err: #a02020;
+    --warn-c: #8a6200;
+  }
 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #111;
-    color: #e0e0e0;
+    background: var(--page-bg) radial-gradient(1100px 700px at 50% 30%, var(--page-glow), var(--page-bg));
+    background-attachment: fixed;
+    color: var(--text);
     font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 18px;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
     padding: 24px 12px;
     -webkit-user-select: none;
     user-select: none;
   }
+  a { color: var(--btn-fg); }
+  a:hover { color: var(--title); }
+  button { font: inherit; }
 
-  .device {
-    flex: 0 0 auto;
-    width: 420px;
-    height: 230px;
-    background: #000;
-    border: 3px solid #222;
-    border-radius: 14px;
-    padding: 6px;
-    box-shadow: 0 0 40px var(--glow, rgba(0, 221, 255, 0.12));
-    transition: box-shadow 1s ease;
-  }
-
-  .screen {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .header {
-    background: #1a1a1a;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 10px;
-    border-bottom: 2px solid #ff9900;
-  }
-
-  .header h1 {
-    color: #00ddff;
-    font-size: 13px;
-    letter-spacing: 2px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .mascot {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-    animation: mascot-pulse 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 3px rgba(217,119,87,0.5));
-  }
-
-  @keyframes mascot-pulse {
-    0%, 100% { opacity: 0.7; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.15); }
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 10px;
-    color: #666;
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #00cc44;
-  }
-  .status-dot.error { background: #ff3333; }
-
-  .content {
-    flex: 1;
-    padding: 8px 10px;
-    display: flex;
-    gap: 10px;
-  }
-
-  .col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .col-divider {
-    width: 1px;
-    background: #333;
-    margin: 0 2px;
-  }
-
-  .section-label {
-    color: #ff9900;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 1px;
-  }
-
-  .section-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .pct-value {
-    font-size: 28px;
-    font-weight: bold;
-    min-width: 52px;
-    line-height: 1;
-  }
-
-  .bar-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .bar-container {
-    height: 14px;
-    border: 1px solid #444;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    transition: width 0.5s ease;
-    border-radius: 1px;
-  }
-
-  .bar-info {
-    font-size: 13px;
-    color: #aaa;
-    text-align: right;
-    font-weight: bold;
-  }
-
-  .col-extra {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-
-  .extra-amount {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    justify-content: center;
-  }
-
-  .extra-used {
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 1;
-  }
-
-  .extra-limit {
-    color: #666;
-    font-size: 12px;
-  }
-
-  .extra-bar {
-    position: relative;
-    height: 14px;
-    border: 1px solid #444;
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 4px;
-    width: 100%;
-  }
-
-  .extra-bar-fill {
-    height: 100%;
-    transition: width 0.5s ease;
-    border-radius: 1px;
-  }
-
-  .extra-bar-label {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: #fff;
-    font-weight: bold;
-    text-shadow: 0 0 3px #000;
-  }
-
-  .footer {
-    background: #1a1a1a;
-    border-top: 1px solid #ff9900;
-    padding: 3px 10px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 9px;
-    color: #00ddff;
-  }
-
-  .loading {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #00ddff;
-    font-size: 14px;
-  }
-
-  /* --- Historico (vista que puede crecer) --- */
-  .history {
-    flex: 1 1 480px;
-    max-width: 800px;
-    background: #000;
-    border: 3px solid #222;
-    border-radius: 14px;
-    padding: 12px 14px;
-  }
-  .hist-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .hist-title { color: #ff9900; font-size: 12px; letter-spacing: 2px; font-weight: bold; }
-  .hist-windows { display: flex; gap: 4px; }
-  .hist-windows button {
-    background: #1a1a1a; color: #888; border: 1px solid #333; border-radius: 4px;
-    font: inherit; font-size: 11px; padding: 3px 9px; cursor: pointer;
-  }
-  .hist-windows button.active { color: #00ddff; border-color: #00ddff; }
-  #chart { width: 100%; height: auto; display: block; }
-  .hist-legend {
-    display: flex; gap: 14px; justify-content: center;
-    margin: 6px 0 10px; font-size: 10px; color: #aaa;
-  }
-  .hist-legend i {
-    display: inline-block; width: 10px; height: 3px;
-    vertical-align: middle; margin-right: 4px; border-radius: 2px;
-  }
-  .hist-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
-  .hcard { background: #111; border: 1px solid #2a2a2a; border-radius: 6px; padding: 7px 9px; }
-  .hcard .lbl { font-size: 9px; color: #888; letter-spacing: 1px; }
-  .hcard .val { font-size: 15px; font-weight: bold; color: #e0e0e0; margin-top: 2px; }
-
-  /* Pantalla angosta: layout en columna (display arriba, historico abajo) */
-  @media (max-width: 900px) {
-    body { flex-direction: column; align-items: center; }
-    /* En columna no estiramos: mismo ancho que el device (420), centrado */
-    .history { flex: 0 0 auto; width: 100%; max-width: 420px; }
-  }
-
-  /* Banner de estado del proxy (Brave caido / sin sesion / datos viejos) */
+  /* ============ Banner de estado del proxy ============ */
   .banner {
     width: 100%;
-    order: -1;            /* siempre arriba de todo, ocupa su propia fila */
-    max-width: 1238px;
-    box-sizing: border-box;
+    max-width: 960px;
     padding: 8px 14px;
     border-radius: 8px;
     font-size: 12px;
@@ -293,72 +114,491 @@
   }
   .banner.err { background: #350c0c; color: #ff6b6b; border: 1px solid #ff3333; }
   .banner.warn { background: #352c0c; color: #ffcc55; border: 1px solid #cc9900; }
+  [data-theme="light"] .banner.err { background: #f3d7d7; color: #a02020; border-color: #a02020; }
+  [data-theme="light"] .banner.warn { background: #efe6c8; color: #8a6200; border-color: #8a6200; }
 
-  /* --- Link a la pagina de configuracion --- */
-  .cfg-link { width: 100%; order: 3; text-align: center; }
-  .cfg-link a { color: #00ddff; font-size: 12px; text-decoration: none; opacity: 0.8; }
-  .cfg-link a:hover { opacity: 1; text-decoration: underline; }
+  /* ============ Bezel + pantalla ============ */
+  .bezel {
+    width: 100%;
+    max-width: 960px;
+    background: var(--bez-bg);
+    border: 3px solid var(--bez-border);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: var(--bez-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: box-shadow 1s ease;
+  }
+  .screen {
+    position: relative;
+    overflow: hidden;
+    background: var(--screen-bg);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Scanlines SOLO en las barras (textura retro), no sobre toda la pantalla */
+  .fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, var(--scan) 0 1px, transparent 1px 3px);
+  }
+
+  /* ============ Header / footer ============ */
+  .hd {
+    background: var(--bar-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 14px;
+    border-bottom: 2px solid var(--accent-border);
+  }
+  .hd h1 {
+    color: var(--title);
+    font-size: 14px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: var(--title-shadow);
+  }
+  .mascot { width: 17px; height: 17px; flex-shrink: 0; animation: mascot-pulse 3s ease-in-out infinite; }
+  .mascot path { fill: var(--mascot); }
+  @keyframes mascot-pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+  .hd-right { display: flex; align-items: center; gap: 10px; }
+  .chip {
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    border: 1px solid var(--btn-fg);
+    border-radius: 4px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+  }
+  .chip:hover { background: var(--btn-hover); }
+  .chip:focus-visible { outline: 1px solid var(--btn-fg); outline-offset: 2px; }
+  .ft {
+    background: var(--bar-bg);
+    border-top: 1px solid var(--accent-border);
+    padding: 4px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    color: var(--title);
+    letter-spacing: 1px;
+  }
+  .ft .mid { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--live); box-shadow: var(--live-glow); }
+  .dot.err { background: #ff3333; box-shadow: 0 0 6px #ff3333; }
+
+  /* ============ Vista principal ============ */
+  .main { display: flex; padding: 14px 14px 10px; }
+  .gauges {
+    width: 250px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    padding-right: 16px;
+    border-right: 1px solid var(--divider);
+  }
+  .g { display: flex; flex-direction: column; gap: 5px; }
+  .g-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .g-label { color: var(--label); font-size: 10px; font-weight: bold; letter-spacing: 2px; }
+  .g-sub { font-size: 10px; color: var(--sec); }
+  .g-val { font-size: 40px; font-weight: bold; line-height: 1; font-variant-numeric: tabular-nums; }
+  .g-val.sm { font-size: 30px; }
+  .g-val .u { color: var(--sec); font-size: 12px; font-weight: normal; }
+  .track {
+    position: relative;
+    height: 12px;
+    border: 1px solid var(--track-border);
+    border-radius: 2px;
+    background: var(--track-bg);
+    overflow: hidden;
+  }
+  .fill { position: relative; height: 100%; width: 0; transition: width 0.5s ease; }
+  /* Segmentos de bloque (retro): cortes anchos y opacos cada 10%, como un VU meter */
+  .ticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 3px), var(--tick) calc(10% - 3px) 10%); }
+  .thr { position: absolute; top: -1px; bottom: -1px; width: 1px; background: var(--thr); opacity: 0.8; }
+
+  .mid-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 0 16px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; }
+  .win { display: flex; gap: 4px; }
+  .win .chip { padding: 2px 9px; }
+  .win .chip:not(.active) { color: var(--sec); border-color: var(--divider); background: var(--bar-bg); }
+  #chart { width: 100%; height: auto; display: block; }
+  .proj-row { display: flex; justify-content: center; gap: 16px; font-size: 10px; color: var(--sec); flex-wrap: wrap; }
+  .proj-row b { font-weight: bold; }
+
+  .side {
+    width: 180px;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    padding-left: 16px;
+    border-left: 1px solid var(--divider);
+  }
+  .side-block { display: flex; flex-direction: column; gap: 8px; }
+  .svc-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text); }
+  .svc-dot { width: 7px; height: 7px; border-radius: 50%; background: #666; flex-shrink: 0; }
+  .svc-state { margin-left: auto; font-size: 9px; }
+  .svc-incident { font-size: 10px; line-height: 1.4; }
+  .kv { display: flex; justify-content: space-between; font-size: 11px; }
+  .kv .k { color: var(--sec); }
+  .kv .v { color: var(--text); font-weight: bold; }
+
+  /* ============ Config ============ */
+  .cfg { padding: 14px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  .panel { border: 1px solid var(--divider); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .panel h2 { color: var(--label); font-size: 10px; letter-spacing: 2px; font-weight: bold; }
+  .cfg-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--sec); min-width: 0; }
+  .fld-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--sec); gap: 8px; }
+  .cfg input[type=text], .cfg input[type=password], .cfg input[type=number], .cfg select {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 3px;
+    color: var(--text);
+    font: inherit;
+    font-size: 11px;
+    padding: 3px 6px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+  }
+  .cfg input[type=number] { text-align: right; }
+  .cfg input.w64 { width: 64px; flex: 0 0 auto; }
+  .cfg input.w44 { width: 44px; flex: 0 0 auto; }
+  .cfg input:focus, .cfg select:focus { border-color: var(--accent); outline: none; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text); cursor: pointer; }
+  .check input { accent-color: var(--accent); width: 14px; height: 14px; position: relative; z-index: 1; }
+  .range-row { display: flex; align-items: center; gap: 8px; }
+  .range-row input[type=range] { flex: 1; accent-color: var(--accent); position: relative; z-index: 1; }
+  .range-val { min-width: 30px; text-align: right; color: var(--accent); font-size: 11px; font-weight: bold; }
+  .save {
+    background: var(--save-bg);
+    color: var(--save-fg);
+    border: 1px solid var(--save-fg);
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: bold;
+    padding: 8px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+  }
+  .save:hover { background: var(--save-hover); }
+  .row2 { display: flex; gap: 6px; }
+  .help { font-size: 9px; color: var(--sec); line-height: 1.4; }
+  .msg { font-size: 10px; text-align: center; }
+  .msg.ok { color: var(--live); }
+  .msg.err { color: var(--err); }
+
+  /* login embebido */
+  .login { padding: 24px; display: flex; justify-content: center; }
+  .login .panel { width: 300px; }
+
+  /* ============ LEDs del bisel ============ */
+  .leds { flex: 0 0 auto; display: flex; justify-content: center; gap: 44px; padding: 3px 0 2px; }
+  .ledg { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; color: var(--sec); letter-spacing: 1px; }
+  .led { width: 7px; height: 7px; border-radius: 50%; background: #1c1c1c; box-shadow: inset 0 0 2px #000; transition: background 0.8s ease, box-shadow 0.8s ease; }
+  [data-theme="light"] .led { background: #b3bfb6; box-shadow: inset 0 0 2px rgba(0,0,0,0.3); }
+  .led.on-green { background: #2ecc5e; box-shadow: 0 0 7px 1px rgba(46,204,94,0.7); }
+  .led.on-amber { background: #ffaa33; box-shadow: 0 0 7px 1px rgba(255,170,51,0.7); }
+  .led.on-red   { background: #ff3333; box-shadow: 0 0 7px 1px rgba(255,51,51,0.7); }
+
+  .loading { padding: 40px; text-align: center; color: var(--title); font-size: 13px; }
+
+  /* ============ Modo MINI ============ */
+  body.mini { padding: 8px; justify-content: flex-start; align-items: flex-start; }
+  body.mini .banner { display: none; }
+  .bezel.mini-w { max-width: 280px; border-radius: 12px; padding: 5px; }
+  .mini-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 7px; }
+  .m-row { display: flex; align-items: center; gap: 8px; }
+  .m-lbl { font-size: 11px; color: var(--label); font-weight: bold; letter-spacing: 1px; width: 22px; }
+  .m-track { flex: 1; position: relative; height: 10px; border: 1px solid var(--track-border); border-radius: 2px; background: var(--track-bg); overflow: hidden; }
+  .m-val { font-size: 13px; font-weight: bold; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+  .m-ft { background: var(--bar-bg); border-top: 1px solid var(--divider); padding: 3px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: var(--sec); }
+  .m-leds { display: flex; gap: 5px; }
+  .m-leds .led { width: 5px; height: 5px; }
+  .hd.mini-hd { padding: 4px 8px; border-bottom-width: 1px; }
+  .hd.mini-hd h1 { font-size: 10px; letter-spacing: 2px; }
+  .hd.mini-hd .mascot { width: 12px; height: 12px; }
+  .hd.mini-hd .chip { font-size: 9px; padding: 1px 6px; }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 860px) {
+    .main { flex-direction: column; gap: 16px; }
+    .gauges { width: 100%; border-right: none; padding-right: 0; flex-direction: row; gap: 14px; }
+    .gauges .g { flex: 1; min-width: 0; }
+    .g-val { font-size: 30px; }
+    .side { width: 100%; border-left: none; padding-left: 0; flex-direction: row; }
+    .side-block { flex: 1; }
+    .mid-col { padding: 0; }
+    .cfg { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mascot { animation: none; }
+    .led, .fill, .bezel { transition: none; }
+  }
 </style>
 </head>
-<body>
+<body data-theme="dark">
 
 <div class="banner" id="banner" style="display:none"></div>
 
-<div class="device">
+<!-- ============ CONSOLA ============ -->
+<div class="bezel" id="app">
   <div class="screen">
-    <div class="header">
-      <h1><svg class="mascot" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" fill="#D97757" fill-rule="evenodd"/></svg> CLAWDMETER</h1>
-      <div class="header-right">
-        <span id="statusText">--</span>
-        <div class="status-dot" id="statusDot"></div>
+    <div class="hd">
+      <h1><svg class="mascot" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" fill-rule="evenodd"/></svg> CLAWDMETER</h1>
+      <div class="hd-right">
+        <button class="chip" id="btnTheme" title="Cambiar tema">☀ LIGHT</button>
+        <button class="chip" id="btnMini" title="Modo widget">◱ MINI</button>
+        <button class="chip" id="btnCfg" title="Configuracion">⚙ CONFIG</button>
       </div>
     </div>
+
     <div class="loading" id="loading">Conectando...</div>
-    <div class="content" id="content" style="display:none"></div>
-    <div class="footer">
-      <span id="plan">--</span>
-      <span id="lastUpdate">Upd --:--:--</span>
+
+    <!-- Vista principal -->
+    <div class="main" id="viewMain" style="display:none">
+      <div class="gauges">
+        <div class="g">
+          <div class="g-head"><span class="g-label">5 HORAS</span><span class="g-sub" id="reset5">reset --</span></div>
+          <span class="g-val" id="val5">--%</span>
+          <div class="track"><div class="fill" id="fill5"></div><div class="ticks"></div><div class="thr" id="thr5" style="left:80%"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-head"><span class="g-label">7 DIAS</span><span class="g-sub" id="reset7">reset --</span></div>
+          <span class="g-val" id="val7">--%</span>
+          <div class="track"><div class="fill" id="fill7"></div><div class="ticks"></div><div class="thr" id="thr7" style="left:80%"></div></div>
+        </div>
+        <div class="g" id="gExtra" style="display:none">
+          <div class="g-head"><span class="g-label">EXTRA</span><span class="g-sub" id="extraLimit">$-- / mes</span></div>
+          <span class="g-val sm" id="valExtra">$--</span>
+          <div class="track"><div class="fill" id="fillExtra"></div><div class="ticks"></div></div>
+        </div>
+      </div>
+
+      <div class="mid-col">
+        <div class="chart-head">
+          <span class="g-label" id="chartTitle">TENDENCIA 24H</span>
+          <div class="win" id="winBtns">
+            <button class="chip" data-w="5h">5H</button>
+            <button class="chip active" data-w="24h">24H</button>
+            <button class="chip" data-w="7d">7D</button>
+          </div>
+        </div>
+        <canvas id="chart" width="1000" height="500"></canvas>
+        <div class="proj-row" id="projRow"></div>
+      </div>
+
+      <div class="side">
+        <div class="side-block">
+          <span class="g-label">ESTADO</span>
+          <div id="svc"><div class="svc-row" style="color:var(--sec)">Cargando...</div></div>
+        </div>
+        <div class="side-block">
+          <span class="g-label">RESUMEN</span>
+          <div class="kv"><span class="k">pico 5h</span><span class="v" id="sumPeak">--</span></div>
+          <div class="kv"><span class="k">prom 5h</span><span class="v" id="sumAvg">--</span></div>
+          <div class="kv"><span class="k" id="sumRedLbl">en rojo</span><span class="v" id="sumRed">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login de config (embebido) -->
+    <div class="login cfg" id="viewLogin" style="display:none">
+      <div class="panel">
+        <h2>INGRESAR</h2>
+        <label class="fld">Usuario<input type="text" id="loginUser" autocomplete="username"></label>
+        <label class="fld">Contraseña<input type="password" id="loginPass" autocomplete="current-password"></label>
+        <button class="save" id="loginBtn">ENTRAR</button>
+        <div class="msg err" id="loginMsg"></div>
+      </div>
+    </div>
+
+    <!-- Vista config -->
+    <div class="cfg" id="viewCfg" style="display:none">
+      <div class="panel">
+        <h2>PANTALLA</h2>
+        <label class="fld-row">Refresco (s)<input type="number" class="w64" id="refresh_sec" data-cfg min="10" max="3600"></label>
+        <div class="fld">
+          <span style="display:flex;justify-content:space-between">Brillo LCD<span class="range-val" id="lcd_brightness_val">--</span></span>
+          <div class="range-row"><input type="range" id="lcd_brightness" data-cfg min="0" max="255"></div>
+        </div>
+        <div class="fld">
+          <span style="display:flex;justify-content:space-between">Brillo LEDs<span class="range-val" id="led_brightness_val">--</span></span>
+          <div class="range-row"><input type="range" id="led_brightness" data-cfg min="0" max="255"></div>
+          <span class="help">0 = LEDs apagados</span>
+        </div>
+        <label class="fld-row">Volver a principal (s)<input type="number" class="w64" id="home_timeout_sec" data-cfg min="0" max="3600"></label>
+        <label class="check"><input type="checkbox" id="flip_screen" data-cfg>Invertir pantalla 180°</label>
+        <label class="fld">Zona horaria
+          <select id="timezone" data-cfg>
+            <option value="ART3">Argentina (UTC-3)</option>
+            <option value="UTC0">UTC</option>
+            <option value="EST5EDT,M3.2.0,M11.1.0">US Eastern (UTC-5/-4)</option>
+            <option value="CST6CDT,M3.2.0,M11.1.0">US Central (UTC-6/-5)</option>
+            <option value="MST7MDT,M3.2.0,M11.1.0">US Mountain (UTC-7/-6)</option>
+            <option value="PST8PDT,M3.2.0,M11.1.0">US Pacific (UTC-8/-7)</option>
+            <option value="BRT3">Brasil (UTC-3)</option>
+            <option value="CLT4CLST,M8.2.6/24,M5.2.6/24">Chile (UTC-4/-3)</option>
+            <option value="COT5">Colombia (UTC-5)</option>
+            <option value="CST6">Mexico Centro (UTC-6)</option>
+            <option value="CET-1CEST,M3.5.0,M10.5.0/3">Europa Central (UTC+1/+2)</option>
+            <option value="GMT0BST,M3.5.0/1,M10.5.0">UK (UTC+0/+1)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="cfg-col">
+        <div class="panel">
+          <h2>NOCHE</h2>
+          <label class="check"><input type="checkbox" id="night_dim_enabled" data-cfg>Atenuar pantalla de noche</label>
+          <div class="fld-row" style="justify-content:flex-start;gap:6px">De<input type="number" class="w44" id="night_start_hour" data-cfg min="0" max="23">a<input type="number" class="w44" id="night_end_hour" data-cfg min="0" max="23">hs</div>
+          <div class="fld">
+            <span style="display:flex;justify-content:space-between">Brillo nocturno<span class="range-val" id="night_brightness_val">--</span></span>
+            <div class="range-row"><input type="range" id="night_brightness" data-cfg min="5" max="255"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>ALERTAS</h2>
+          <label class="check"><input type="checkbox" id="alerts_enabled" data-cfg>Alertas sonoras</label>
+          <div class="row2">
+            <label class="fld" style="flex:1">Aviso %<input type="number" id="warn_threshold" data-cfg min="1" max="100"></label>
+            <label class="fld" style="flex:1">Crítico %<input type="number" id="crit_threshold" data-cfg min="1" max="100"></label>
+            <label class="fld" style="flex:1">GPIO<input type="number" id="buzzer_pin" data-cfg min="0" max="48"></label>
+          </div>
+          <span class="help">Buzzer pasivo (PWM). 0 = sin sonido. Pines seguros: 11, 12, 13, 14, 21.</span>
+        </div>
+      </div>
+
+      <div class="cfg-col">
+        <div class="panel">
+          <h2>CLIMA</h2>
+          <div class="row2">
+            <input type="text" id="city" data-cfg placeholder="Ej: Bahia Blanca" style="flex:1;min-width:0">
+            <button class="chip" id="buscarBtn" style="flex:0 0 auto">BUSCAR</button>
+          </div>
+          <span class="help" id="cityres">Busca la ciudad y completa lat/lon (Open-Meteo)</span>
+          <div class="row2">
+            <label class="fld" style="flex:1">Lat<input type="text" id="lat" data-cfg></label>
+            <label class="fld" style="flex:1">Lon<input type="text" id="lon" data-cfg></label>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>SEGURIDAD</h2>
+          <label class="fld">Usuario<input type="text" id="config_user" data-cfg autocomplete="off"></label>
+          <label class="fld">Nueva contraseña<input type="password" id="config_pass" data-cfg autocomplete="new-password" placeholder="(vacío = no cambiar)"></label>
+          <span class="help">Se guarda hasheada con bcrypt.</span>
+        </div>
+        <button class="save" id="saveBtn">GUARDAR</button>
+        <div class="msg" id="saveMsg"></div>
+        <a href="#" id="logout" style="font-size:10px;text-align:center;color:var(--sec)">Cerrar sesión</a>
+      </div>
+    </div>
+
+    <div class="ft">
+      <span id="lastUpdate">UPD --:--:--</span>
+      <span class="mid"><span id="plan">--</span> · <span id="statusText">--</span><i class="dot" id="statusDot"></i></span>
       <span id="clock">--:--:--</span>
     </div>
   </div>
+  <div class="leds">
+    <span class="ledg"><i class="led" id="led5h"></i>5H</span>
+    <span class="ledg"><i class="led" id="led7d"></i>7D</span>
+    <span class="ledg"><i class="led" id="ledSys"></i>SYS</span>
+  </div>
 </div>
 
-<div class="history" id="history">
-  <div class="hist-head">
-    <span class="hist-title">HISTORICO</span>
-    <div class="hist-windows">
-      <button data-w="5h">5H</button>
-      <button data-w="24h" class="active">24H</button>
-      <button data-w="7d">7D</button>
+<!-- ============ WIDGET MINI ============ -->
+<div class="bezel mini-w" id="miniApp" style="display:none">
+  <div class="screen">
+    <div class="hd mini-hd">
+      <h1><svg class="mascot" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" fill-rule="evenodd"/></svg> CLAWDMETER</h1>
+      <div class="hd-right" style="gap:7px">
+        <i class="dot" id="mStatusDot"></i>
+        <button class="chip" id="mBtnTheme" title="Cambiar tema">☀</button>
+        <button class="chip" id="mBtnFull" title="Vista completa">◰ FULL</button>
+      </div>
+    </div>
+    <div class="mini-body">
+      <div class="m-row"><span class="m-lbl">5H</span><div class="m-track"><div class="fill" id="mFill5"></div><div class="ticks"></div><div class="thr" id="mThr5" style="left:80%"></div></div><span class="m-val" id="mVal5">--%</span></div>
+      <div class="m-row"><span class="m-lbl">7D</span><div class="m-track"><div class="fill" id="mFill7"></div><div class="ticks"></div><div class="thr" id="mThr7" style="left:80%"></div></div><span class="m-val" id="mVal7">--%</span></div>
+      <div class="m-row" id="mRowExtra" style="display:none"><span class="m-lbl">$</span><div class="m-track"><div class="fill" id="mFillExtra"></div><div class="ticks"></div></div><span class="m-val" id="mValExtra">--</span></div>
+    </div>
+    <div class="m-ft">
+      <span id="mProj" style="font-weight:bold">--</span>
+      <span class="m-leds"><i class="led" id="mLed5h"></i><i class="led" id="mLed7d"></i><i class="led" id="mLedSys"></i></span>
     </div>
   </div>
-  <canvas id="chart" width="780" height="220"></canvas>
-  <div class="hist-legend">
-    <span><i style="background:#00ddff"></i>5 horas</span>
-    <span><i style="background:#ff9900"></i>7 dias</span>
-    <span><i style="background:#c071ff"></i>extra</span>
-  </div>
-  <div class="hist-cards" id="histCards"></div>
 </div>
-
-<div class="cfg-link"><a href="/config.html">&#9881; Configuracion</a></div>
 
 <script>
 const PROXY = '/api/usage';
 const REFRESH = 60000;
 let lastSuccessAt = 0;
+let lastData = null;
+let histWindow = '24h';
+let warnThreshold = 80;
 
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+
+/* ============ Tema (persistido) ============ */
+function isLight() { return document.body.dataset.theme === 'light'; }
+function applyTheme(t) {
+  document.body.dataset.theme = t;
+  $('btnTheme').textContent = t === 'dark' ? '☀ LIGHT' : '🌙 DARK';
+  $('mBtnTheme').textContent = t === 'dark' ? '☀' : '🌙';
+  localStorage.setItem('clawdmeter_theme', t);
+  if (lastData) render(lastData);
+  loadHistory();
+}
+$('btnTheme').addEventListener('click', () => applyTheme(isLight() ? 'dark' : 'light'));
+$('mBtnTheme').addEventListener('click', () => applyTheme(isLight() ? 'dark' : 'light'));
+
+/* ============ Modo mini (persistido) ============ */
+function applyMode(m) {
+  const mini = m === 'mini';
+  document.body.classList.toggle('mini', mini);
+  $('app').style.display = mini ? 'none' : '';
+  $('miniApp').style.display = mini ? '' : 'none';
+  localStorage.setItem('clawdmeter_mode', m);
+}
+$('btnMini').addEventListener('click', () => applyMode('mini'));
+$('mBtnFull').addEventListener('click', () => applyMode('full'));
+
+/* ============ Colores (dark = original, light = oscurecido) ============ */
 function smoothColor(p) {
   let r, g;
-  if (p < 50) {
-    r = Math.round((p / 50) * 255);
-    g = 204;
+  if (isLight()) {
+    if (p < 50) { r = Math.round((p / 50) * 200); g = 150; }
+    else { r = 210; g = Math.round(150 * (1 - (p - 50) / 50)); }
   } else {
-    r = 255;
-    g = Math.round(204 * (1 - (p - 50) / 50));
+    if (p < 50) { r = Math.round((p / 50) * 255); g = 204; }
+    else { r = 255; g = Math.round(204 * (1 - (p - 50) / 50)); }
   }
   return `rgb(${r},${g},0)`;
 }
+const glowOf = (rgb, a) => rgb.replace('rgb(', 'rgba(').replace(')', `,${a})`);
 
 function fmtReset(iso) {
   if (!iso) return '--';
@@ -370,45 +610,14 @@ function fmtReset(iso) {
   } catch { return '?'; }
 }
 
-function renderRate(label, s) {
-  let p = s?.utilization || 0, sc = smoothColor(p), r = fmtReset(s?.resets_at);
-  return `
-    <div class="section-label">${label}</div>
-    <div class="section-row">
-      <span class="pct-value" style="color:${sc}">${p.toFixed(0)}%</span>
-      <div class="bar-wrapper">
-        <div class="bar-container">
-          <div class="bar-fill" style="width:${Math.min(p,100)}%;background:${sc}"></div>
-        </div>
-        <div class="bar-info">reset: ${r}</div>
-      </div>
-    </div>`;
-}
-
-function renderExtra(e) {
-  if (!e?.is_enabled) return '';
-  let p=e.utilization||0, u=(e.used_credits||0)/100, l=(e.monthly_limit||0)/100, sc=smoothColor(p);
-  return `
-    <div class="section-label">EXTRA USAGE</div>
-    <div class="extra-amount">
-      <span class="extra-used" style="color:${sc}">$${u.toFixed(2)}</span>
-      <span class="extra-limit">/ $${l.toFixed(0)}</span>
-    </div>
-    <div class="extra-bar">
-      <div class="extra-bar-fill" style="width:${Math.min(p,100)}%;background:${sc}"></div>
-      <div class="extra-bar-label">${p.toFixed(1)}%</div>
-    </div>`;
-}
-
+/* ============ Banner de estado del proxy ============ */
 function setBanner(msg, kind) {
-  const b = document.getElementById('banner');
+  const b = $('banner');
   if (!msg) { b.style.display = 'none'; return; }
   b.textContent = msg;
   b.className = 'banner ' + (kind || '');
   b.style.display = 'block';
 }
-
-// Traduce el estado del proxy a un banner (o lo oculta si todo va bien).
 function applyProxyState(p, stale) {
   p = p || {};
   if (p.connected === false) return setBanner('⚠ Brave caido — el proxy intenta reconectar', 'err');
@@ -417,6 +626,64 @@ function applyProxyState(p, stale) {
   setBanner(null);
 }
 
+/* ============ Render de medidores (consola + mini) ============ */
+function setGauge(p, valEl, fillEl) {
+  const c = smoothColor(p);
+  valEl.textContent = p.toFixed(0) + '%';
+  valEl.style.color = c;
+  valEl.style.textShadow = isLight() ? 'none' : `0 0 14px ${glowOf(c, 0.45)}`;
+  fillEl.style.width = Math.min(p, 100) + '%';
+  fillEl.style.background = c;
+  fillEl.style.boxShadow = isLight() ? 'none' : `0 0 8px ${glowOf(c, 0.45)}`;
+}
+
+function render(d) {
+  const u = d.usage;
+  const p5 = u.five_hour?.utilization || 0;
+  const p7 = u.seven_day?.utilization || 0;
+
+  setGauge(p5, $('val5'), $('fill5'));
+  setGauge(p7, $('val7'), $('fill7'));
+  $('reset5').textContent = 'reset ' + fmtReset(u.five_hour?.resets_at);
+  $('reset7').textContent = 'reset ' + fmtReset(u.seven_day?.resets_at);
+
+  const e = u.extra_usage;
+  const showExtra = !!e?.is_enabled;
+  $('gExtra').style.display = showExtra ? '' : 'none';
+  $('mRowExtra').style.display = showExtra ? '' : 'none';
+  if (showExtra) {
+    const pe = e.utilization || 0, used = (e.used_credits || 0) / 100, lim = (e.monthly_limit || 0) / 100;
+    // misma escala verde->rojo que 5h/7d: $0 gastado = verde, no rojo
+    const c = smoothColor(pe);
+    $('valExtra').textContent = '$' + used.toFixed(2);
+    $('valExtra').style.color = c;
+    $('valExtra').style.textShadow = isLight() ? 'none' : `0 0 14px ${glowOf(c, 0.4)}`;
+    $('extraLimit').textContent = '$' + lim.toFixed(0) + ' / mes';
+    $('fillExtra').style.width = Math.min(pe, 100) + '%';
+    $('fillExtra').style.background = c;
+    $('mFillExtra').style.width = Math.min(pe, 100) + '%';
+    $('mFillExtra').style.background = c;
+    $('mValExtra').textContent = Math.round(used);
+    $('mValExtra').style.color = c;
+  }
+
+  // mini
+  const c5 = smoothColor(p5), c7 = smoothColor(p7);
+  $('mVal5').textContent = p5.toFixed(0) + '%'; $('mVal5').style.color = c5;
+  $('mFill5').style.width = Math.min(p5, 100) + '%'; $('mFill5').style.background = c5;
+  $('mVal7').textContent = p7.toFixed(0) + '%'; $('mVal7').style.color = c7;
+  $('mFill7').style.width = Math.min(p7, 100) + '%'; $('mFill7').style.background = c7;
+
+  // glow del bisel segun 5h (solo dark)
+  const m = c5.match(/\d+/g);
+  document.documentElement.style.setProperty('--glow', isLight() ? 'transparent' : `rgba(${m[0]},${m[1]},${m[2]},0.22)`);
+
+  let raw = d.org?.plan || '';
+  let plan = raw.replace(/^default_/,'').replace(/^claude_/,'').replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  $('plan').textContent = plan || '--';
+}
+
+/* ============ Fetch principal ============ */
 async function refresh() {
   try {
     const r = await fetch(PROXY);
@@ -426,62 +693,146 @@ async function refresh() {
       applyProxyState(info.proxy, true);
       throw new Error(r.status);
     }
-    const d = await r.json(), u = d.usage;
-
-    let left = renderRate('5 HORAS', u.five_hour) + renderRate('7 DIAS', u.seven_day);
-    let right = renderExtra(u.extra_usage);
-
-    document.getElementById('content').innerHTML = `
-      <div class="col">${left}</div>
-      <div class="col-divider"></div>
-      <div class="col-extra">${right}</div>`;
-    document.getElementById('content').style.display = 'flex';
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('statusDot').className = 'status-dot';
-    document.getElementById('statusText').textContent = 'Live';
-
-    let raw = d.org?.plan || '';
-    let plan = raw.replace(/^default_/,'').replace(/^claude_/,'').replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
-    document.getElementById('plan').textContent = plan;
+    const d = await r.json();
+    lastData = d;
+    render(d);
+    $('loading').style.display = 'none';
+    $('viewMain').style.display = cfgOpen ? 'none' : '';
+    $('statusDot').className = 'dot';
+    $('mStatusDot').className = 'dot';
+    $('statusText').textContent = 'Live';
     lastSuccessAt = Date.now();
-    document.getElementById('lastUpdate').textContent = 'Upd ' + new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    document.getElementById('lastUpdate').style.color = '#00ddff';
-
-    let p5 = u.five_hour?.utilization || 0;
-    let gc = smoothColor(p5);
-    let m = gc.match(/\d+/g);
-    document.querySelector('.device').style.setProperty('--glow', `rgba(${m[0]},${m[1]},${m[2]},0.25)`);
-
+    $('lastUpdate').textContent = 'UPD ' + new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    $('lastUpdate').style.color = '';
     applyProxyState(d.proxy, d.stale);
+    updateLeds(d);
   } catch(e) {
-    document.getElementById('statusDot').className = 'status-dot error';
-    document.getElementById('statusText').textContent = 'Error';
-    // Si el error no es HTTP (e.message no es un numero), el proxy no responde.
+    $('statusDot').className = 'dot err';
+    $('mStatusDot').className = 'dot err';
+    $('statusText').textContent = 'Error';
+    $('ledSys').className = 'led on-red';
+    $('mLedSys').className = 'led on-red';
     if (isNaN(+e.message)) setBanner('⚠ Proxy no responde', 'err');
   }
 }
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
+/* ============ LEDs (mismo criterio que colors.ino) ============ */
+function ledClass(m) {
+  if (!m) return 'led';
+  if (m.etaMin > 0) return m.hitsLimit ? 'led on-red' : 'led on-amber';
+  return 'led on-green';
+}
+function updateLeds(d) {
+  const p = d.projection || {};
+  $('led5h').className = $('mLed5h').className = ledClass(p.five_hour);
+  $('led7d').className = $('mLed7d').className = ledClass(p.seven_day);
+  const pr = d.proxy || {};
+  const bad = pr.connected === false || pr.sessionValid === false;
+  const cls = 'led ' + (bad ? 'on-red' : d.stale ? 'on-amber' : 'on-green');
+  $('ledSys').className = $('mLedSys').className = cls;
 }
 
-refresh();
-setInterval(refresh, REFRESH);
-setInterval(() => {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  if (lastSuccessAt > 0) {
-    let stale = (Date.now() - lastSuccessAt) / REFRESH;
-    let el = document.getElementById('lastUpdate');
-    if (stale > 3) el.style.color = '#ff3333';
-    else if (stale > 2) el.style.color = '#ffcc00';
+/* ============ Historico ============ */
+function chartColors() {
+  return isLight()
+    ? { cy: '#0090a8', or: '#c47800', pu: '#8a4fc9', area: 'rgba(0,144,168,0.18)', thr: 'rgba(190,30,30,0.5)', axis: '#4a7c8a', grid: 'rgba(0,90,110,0.16)' }
+    : { cy: '#00ddff', or: '#ff9900', pu: '#c071ff', area: 'rgba(0,221,255,0.22)', thr: 'rgba(255,51,51,0.45)', axis: '#3e8496', grid: 'rgba(0,221,255,0.09)' };
+}
+function winLabels(win, tmin, tmax) {
+  const n = 5, out = [];
+  for (let i = 0; i < n; i++) {
+    const t = tmin + (i / (n - 1)) * (tmax - tmin);
+    const ago = (Date.now() - t) / 60000; // min
+    if (i === n - 1) { out.push('ahora'); continue; }
+    if (win === '7d') out.push('-' + Math.round(ago / 1440) + 'd');
+    else out.push('-' + (ago >= 90 ? Math.round(ago / 60) + 'h' : Math.round(ago) + 'm'));
   }
-}, 1000);
+  return out;
+}
 
-// ---- HISTORICO ----
-const HCOLORS = { five_hour: '#00ddff', seven_day: '#ff9900', extra_usage: '#c071ff' };
-let histWindow = '24h';
+function drawChart(series) {
+  const c = $('chart'), ctx = c.getContext('2d');
+  const cols = chartColors();
+  const W = c.width, H = c.height;
+  const padL = 10, padR = 56, padT = 16, padB = 34;
+  ctx.clearRect(0, 0, W, H);
 
+  let tmin = Infinity, tmax = -Infinity;
+  for (const k in series) for (const pt of series[k]) { if (pt.t < tmin) tmin = pt.t; if (pt.t > tmax) tmax = pt.t; }
+
+  const X = t => padL + ((t - tmin) / Math.max(1, tmax - tmin)) * (W - padL - padR);
+  const Y = v => padT + (1 - v / 100) * (H - padT - padB);
+
+  ctx.font = '15px monospace'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  for (let p = 0; p <= 100; p += 25) {
+    const y = Y(p);
+    ctx.strokeStyle = cols.grid; ctx.lineWidth = 1;
+    ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cols.axis;
+    ctx.fillText(p + '%', W - padR + 10, y);
+  }
+
+  if (!isFinite(tmin)) {
+    ctx.fillStyle = cols.axis;
+    ctx.fillText('Sin datos aun - el historico se llena con el tiempo', padL + 10, H / 2);
+    return;
+  }
+
+  // umbral de aviso
+  ctx.strokeStyle = cols.thr; ctx.setLineDash([6, 5]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, Y(warnThreshold)); ctx.lineTo(W - padR, Y(warnThreshold)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // labels de tiempo
+  ctx.fillStyle = cols.axis; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  winLabels(histWindow, tmin, tmax).forEach((l, i, arr) => {
+    ctx.fillText(l, padL + (i / (arr.length - 1)) * (W - padL - padR), H - padB + 10);
+  });
+  ctx.textAlign = 'left';
+
+  const KEYCOL = { five_hour: cols.cy, seven_day: cols.or, extra_usage: cols.pu };
+
+  // area bajo 5h
+  const cy = series.five_hour || [];
+  if (cy.length) {
+    const grad = ctx.createLinearGradient(0, padT, 0, H - padB);
+    grad.addColorStop(0, cols.area);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(X(cy[0].t), Y(cy[0].v));
+    cy.forEach(pt => ctx.lineTo(X(pt.t), Y(pt.v)));
+    ctx.lineTo(X(cy[cy.length-1].t), Y(0)); ctx.lineTo(X(cy[0].t), Y(0)); ctx.closePath(); ctx.fill();
+  }
+
+  const glowLine = (pts, col, w, blur) => {
+    if (!pts.length) return;
+    ctx.save();
+    ctx.strokeStyle = col; ctx.lineWidth = w;
+    if (!isLight()) { ctx.shadowColor = col; ctx.shadowBlur = blur; }
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach((pt, i) => { i ? ctx.lineTo(X(pt.t), Y(pt.v)) : ctx.moveTo(X(pt.t), Y(pt.v)); });
+    ctx.stroke();
+    ctx.restore();
+  };
+  glowLine(series.extra_usage || [], KEYCOL.extra_usage, 2, 6);
+  glowLine(series.seven_day || [], KEYCOL.seven_day, 2, 6);
+  glowLine(cy, KEYCOL.five_hour, 2.5, 9);
+
+  if (cy.length) {
+    const last = cy[cy.length - 1];
+    ctx.save();
+    ctx.fillStyle = cols.cy;
+    if (!isLight()) { ctx.shadowColor = cols.cy; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.arc(X(last.t), Y(last.v), 4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+/* ============ Proyeccion + resumen ============ */
 function fmtEta(min) {
   if (min == null || min < 0) return '-';
   if (min < 60) return min + 'm';
@@ -489,63 +840,31 @@ function fmtEta(min) {
   const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60);
   return d + 'd ' + h + 'h';
 }
-function trendArrow(t) { return t === 'up' ? '▲' : t === 'down' ? '▼' : '▬'; }
-
-// Proyeccion: la ETA al limite (al ritmo actual) es el dato principal. El color
-// dice si llegas a tocarlo (rojo) o si la ventana resetea antes => tranqui (verde).
+const trendArrow = t => t === 'up' ? '▲' : t === 'down' ? '▼' : '▬';
 function projInfo(m) {
   const a = trendArrow(m.trend);
-  if (m.etaMin > 0) {
-    // sube: rojo si tocas el limite antes del reset, ambar si resetea antes (sube pero ok)
-    return { text: a + ' lim ' + fmtEta(m.etaMin), color: m.hitsLimit ? '#ff6b6b' : '#ffaa33' };
-  }
-  return { text: a + ' OK', color: '#5ad17f' };
+  const okC = isLight() ? '#1d8a43' : '#5ad17f';
+  const ambC = isLight() ? '#8a6200' : '#ffaa33';
+  const redC = isLight() ? '#a02020' : '#ff6b6b';
+  if (m.etaMin > 0) return { text: a + ' lim ' + fmtEta(m.etaMin), color: m.hitsLimit ? redC : ambC };
+  return { text: a + ' OK', color: okC };
 }
 
-function drawChart(series) {
-  const c = document.getElementById('chart'), ctx = c.getContext('2d');
-  const W = c.width, H = c.height, padL = 44, padR = 8, padT = 12, padB = 20;
-  ctx.clearRect(0, 0, W, H);
-
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
-  ctx.fillStyle = '#e6edf3'; ctx.font = 'bold 15px monospace'; ctx.textBaseline = 'middle';
-  for (let p = 0; p <= 100; p += 25) {
-    const y = padT + (1 - p / 100) * (H - padT - padB);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-    ctx.fillText(p + '%', 4, y);
-  }
-
-  let tmin = Infinity, tmax = -Infinity;
-  for (const k in series) for (const pt of series[k]) { if (pt.t < tmin) tmin = pt.t; if (pt.t > tmax) tmax = pt.t; }
-  if (!isFinite(tmin)) {
-    ctx.fillStyle = '#a8b4c0';
-    ctx.fillText('Sin datos aun - el historico se llena con el tiempo', padL + 10, H / 2);
-    return;
-  }
-  const span = Math.max(1, tmax - tmin);
-  const X = t => padL + ((t - tmin) / span) * (W - padL - padR);
-  const Y = v => padT + (1 - v / 100) * (H - padT - padB);
-  for (const k in series) {
-    const pts = series[k]; if (!pts.length) continue;
-    ctx.strokeStyle = HCOLORS[k]; ctx.lineWidth = 2; ctx.beginPath();
-    pts.forEach((pt, i) => { const x = X(pt.t), y = Y(pt.v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    ctx.stroke();
-  }
-}
-
-function fillCards(sum, warn) {
+function fillSummary(sum, warn) {
+  warnThreshold = warn || 80;
+  document.querySelectorAll('.thr').forEach(el => { el.style.left = warnThreshold + '%'; });
   const m = sum.five_hour || {};
   const w = sum.seven_day || {};
+  $('sumPeak').textContent = m.peak == null ? '-' : m.peak + '%';
+  $('sumAvg').textContent = m.avg == null ? '-' : m.avg + '%';
+  $('sumRedLbl').textContent = 'en rojo ≥' + warnThreshold + '%';
+  $('sumRed').textContent = Math.round((m.redZoneFrac || 0) * 100) + '%';
   const p5 = projInfo(m), pw = projInfo(w);
-  const cards = [
-    ['PICO 5H', m.peak == null ? '-' : m.peak + '%', null],
-    ['PROMEDIO 5H', m.avg == null ? '-' : m.avg + '%', null],
-    ['EN ROJO ≥' + (warn || 80) + '%', Math.round((m.redZoneFrac || 0) * 100) + '%', null],
-    ['PROY. 5H', p5.text, p5.color],
-    ['PROY. SEMANA', pw.text, pw.color],
-  ];
-  document.getElementById('histCards').innerHTML = cards.map(([l, v, c]) =>
-    `<div class="hcard"><div class="lbl">${l}</div><div class="val"${c ? ` style="color:${c}"` : ''}>${v}</div></div>`).join('');
+  $('projRow').innerHTML =
+    `<span>proy 5h: <b style="color:${p5.color}">${esc(p5.text)}</b></span>` +
+    `<span>semana: <b style="color:${pw.color}">${esc(pw.text)}</b></span>`;
+  $('mProj').textContent = p5.text;
+  $('mProj').style.color = p5.color;
 }
 
 async function loadHistory() {
@@ -554,20 +873,184 @@ async function loadHistory() {
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     drawChart(d.series);
-    fillCards(d.summary, d.warn);
+    fillSummary(d.summary, d.warn);
   } catch (e) { /* el proxy puede no tener historico todavia */ }
 }
 
-document.querySelectorAll('.hist-windows button').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll('.hist-windows button').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    histWindow = b.dataset.w;
-    loadHistory();
-  });
+$('winBtns').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#winBtns .chip').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  histWindow = b.dataset.w;
+  $('chartTitle').textContent = 'TENDENCIA ' + histWindow.toUpperCase();
+  loadHistory();
 });
+
+/* ============ Estado de servicios ============ */
+const SVC_COLORS = {
+  operational: 'var(--live)',
+  degraded_performance: '#ffcc00',
+  partial_outage: '#ff9900',
+  major_outage: '#ff3333',
+  under_maintenance: 'var(--title)',
+};
+const SVC_LABELS = {
+  operational: 'Operativo',
+  degraded_performance: 'Degradado',
+  partial_outage: 'Caida parcial',
+  major_outage: 'Caida mayor',
+  under_maintenance: 'Mantenim.',
+};
+async function loadStatus() {
+  const el = $('svc');
+  try {
+    const r = await fetch('/api/status');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (!d.components.length) {
+      el.innerHTML = '<div class="svc-row" style="color:var(--sec)">Sin datos</div>';
+      return;
+    }
+    let html = d.components.map(c => {
+      const col = d.stale ? 'var(--sec)' : (SVC_COLORS[c.status] || 'var(--sec)');
+      return `<div class="svc-row"><i class="svc-dot" style="background:${col}"></i>${esc(c.label)}<span class="svc-state" style="color:${col}">${esc(SVC_LABELS[c.status] || c.status)}</span></div>`;
+    }).join('');
+    if (d.incidents.length) {
+      const i = d.incidents[0];
+      const color = (i.impact === 'critical' || i.impact === 'major') ? 'var(--err)' : 'var(--warn-c)';
+      const link = i.url ? ` — <a href="${esc(i.url)}" target="_blank" rel="noopener">detalle</a>` : '';
+      html += `<div class="svc-incident" style="color:${color}">&#9888; ${esc(i.name)} (${esc(i.status)})${link}</div>`;
+    }
+    el.innerHTML = html;
+  } catch (e) { /* el banner principal ya lo indica */ }
+}
+
+/* ============ Config integrada (mismos endpoints que config.html) ============ */
+let cfgOpen = false;
+function authVal() { return sessionStorage.getItem('cfgAuth'); }
+function headers(extra) { const a = authVal(); return Object.assign(a ? { Authorization: 'Basic ' + a } : {}, extra || {}); }
+
+function showCfgView(which) {
+  $('viewMain').style.display = which === 'main' ? '' : 'none';
+  $('viewLogin').style.display = which === 'login' ? '' : 'none';
+  $('viewCfg').style.display = which === 'cfg' ? '' : 'none';
+  $('loading').style.display = 'none';
+  cfgOpen = which !== 'main';
+  $('btnCfg').textContent = cfgOpen ? '← VOLVER' : '⚙ CONFIG';
+}
+
+function populate(cfg) {
+  for (const k in cfg) {
+    const el = $(k); if (!el) continue;
+    if (el.type === 'checkbox') el.checked = !!cfg[k];
+    else el.value = cfg[k];
+    const v = $(k + '_val'); if (v) v.textContent = cfg[k];
+  }
+}
+function collect() {
+  const patch = {};
+  document.querySelectorAll('[data-cfg]').forEach(el => { patch[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+  return patch;
+}
+function setSaveMsg(text, ok) {
+  const m = $('saveMsg'); m.textContent = text; m.className = 'msg ' + (ok ? 'ok' : 'err');
+  if (ok) setTimeout(() => { m.textContent = ''; }, 3500);
+}
+
+async function openCfg() {
+  if (cfgOpen) { showCfgView('main'); return; }
+  let r;
+  try { r = await fetch('/api/config', { headers: headers() }); }
+  catch (e) { showCfgView('login'); return; }
+  if (!r.ok) { showCfgView('login'); return; }
+  showCfgView('cfg');
+  try { populate(await r.json()); } catch (e) { /* ignore */ }
+}
+$('btnCfg').addEventListener('click', openCfg);
+
+// Enter en usuario/contrasena = click en ENTRAR
+['loginUser', 'loginPass'].forEach(id =>
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); }));
+
+$('loginBtn').addEventListener('click', async () => {
+  sessionStorage.setItem('cfgAuth', btoa($('loginUser').value + ':' + $('loginPass').value));
+  let r;
+  try { r = await fetch('/api/config', { headers: headers() }); }
+  catch (e) { $('loginMsg').textContent = 'Sin conexion'; return; }
+  if (r.status === 401) { sessionStorage.removeItem('cfgAuth'); $('loginMsg').textContent = 'Credenciales invalidas'; return; }
+  $('loginMsg').textContent = '';
+  showCfgView('cfg');
+  try { populate(await r.json()); } catch (e) { /* ignore */ }
+});
+
+$('saveBtn').addEventListener('click', async () => {
+  const newUser = $('config_user').value;
+  const newPass = $('config_pass').value;
+  let r;
+  try { r = await fetch('/api/config', { method: 'POST', headers: headers({ 'content-type': 'application/json' }), body: JSON.stringify(collect()) }); }
+  catch (e) { setSaveMsg('Sin conexion', false); return; }
+  if (r.status === 401) { showCfgView('login'); return; }
+  if (r.ok) {
+    const old = authVal() ? atob(authVal()) : ':';
+    const oldPass = old.slice(old.indexOf(':') + 1);
+    sessionStorage.setItem('cfgAuth', btoa(newUser + ':' + (newPass || oldPass)));
+    $('config_pass').value = '';
+    populate(await r.json());
+    setSaveMsg('Guardado ✓', true);
+  } else setSaveMsg('Error al guardar', false);
+});
+
+$('buscarBtn').addEventListener('click', async () => {
+  const q = $('city').value.trim();
+  const res = $('cityres');
+  if (!q) { res.textContent = 'Escribi una ciudad primero'; return; }
+  res.textContent = 'Buscando...';
+  try {
+    const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=es');
+    const j = await r.json();
+    if (!j.results || !j.results.length) { res.textContent = 'Ciudad no encontrada'; return; }
+    const c = j.results[0];
+    $('lat').value = c.latitude;
+    $('lon').value = c.longitude;
+    $('city').value = c.name;
+    res.textContent = c.name + (c.admin1 ? ', ' + c.admin1 : '') + (c.country ? ', ' + c.country : '') + ' — guarda para aplicar';
+  } catch (e) { res.textContent = 'Error: ' + e.message; }
+});
+
+$('logout').addEventListener('click', e => {
+  e.preventDefault();
+  sessionStorage.removeItem('cfgAuth');
+  $('loginUser').value = ''; $('loginPass').value = '';
+  showCfgView('login');
+});
+
+// ranges: reflejar valor en vivo
+document.querySelectorAll('input[type=range]').forEach(el => {
+  el.addEventListener('input', () => { const v = $(el.id + '_val'); if (v) v.textContent = el.value; });
+});
+
+/* ============ Arranque ============ */
+applyTheme(localStorage.getItem('clawdmeter_theme') || 'dark');
+applyMode(localStorage.getItem('clawdmeter_mode') || 'full');
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
+refresh();
+setInterval(refresh, REFRESH);
 loadHistory();
 setInterval(loadHistory, REFRESH);
+loadStatus();
+setInterval(loadStatus, REFRESH);
+setInterval(() => {
+  $('clock').textContent = new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if (lastSuccessAt > 0) {
+    let stale = (Date.now() - lastSuccessAt) / REFRESH;
+    if (stale > 3) $('lastUpdate').style.color = '#ff3333';
+    else if (stale > 2) $('lastUpdate').style.color = '#ffcc00';
+  }
+}, 1000);
 </script>
 </body>
 </html>

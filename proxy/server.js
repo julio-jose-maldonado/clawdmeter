@@ -5,6 +5,7 @@ const usage = require('./lib/usage');
 const history = require('./lib/history');
 const config = require('./lib/config');
 const backup = require('./lib/backup');
+const status = require('./lib/status');
 
 const PORT = Number.parseInt(process.env.PROXY_PORT || '3456');
 const SAMPLE_MS = 60_000; // muestreo continuo del histórico
@@ -74,6 +75,13 @@ app.get('/health', (_, res) => {
     stale: data.stale,
     proxy: data.proxy,
   });
+});
+
+// Estado de los servicios de Claude (status.claude.com) para los chips de la
+// PWA: claude.ai / Claude Code / API. refresh() cachea y nunca lanza.
+app.get('/api/status', async (_, res) => {
+  await status.refresh();
+  res.json(status.getData());
 });
 
 // Histórico completo (para la PWA): series + métricas derivadas.

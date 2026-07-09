@@ -25,6 +25,8 @@ Brave Browser (perfil dedicado, CDP)
 
 No usa API keys ni session keys. La autenticacion vive en el perfil del browser — te logueas una vez y listo.
 
+Ademas el proxy consulta la pagina de estado oficial (**status.claude.com**, API publica, sin browser) y expone `/api/status` con el estado de claude.ai, Claude Code y la Claude API.
+
 ## Estructura
 
 ```
@@ -37,9 +39,13 @@ No usa API keys ni session keys. La autenticacion vive en el perfil del browser 
 │   ├── lib/
 │   │   ├── browser.js           # Conexion Brave/CDP (resiliente: reconecta, no muere)
 │   │   ├── usage.js             # Cache y refresh de datos de uso
-│   │   └── history.js           # Historico de uso en SQLite + proyeccion
+│   │   ├── history.js           # Historico de uso en SQLite + proyeccion
+│   │   ├── config.js            # Config centralizada en SQLite (la baja el ESP32)
+│   │   ├── backup.js            # Backup diario de las DBs (fuera del proyecto)
+│   │   └── status.js            # Estado de los servicios de Claude (status.claude.com)
 │   └── public/                  # PWA (widget de escritorio)
-│       ├── index.html           # Dashboard web instalable
+│       ├── index.html           # Consola: uso + tendencia + estado + config embebida
+│       ├── config.html          # Pagina de config standalone (fallback)
 │       ├── manifest.json        # Manifest PWA
 │       ├── icon.svg             # Icono de la app
 │       └── sw.js                # Service worker
@@ -150,7 +156,20 @@ Instala un LaunchAgent (`~/Library/LaunchAgents/com.clawdmeter.proxy.plist`) que
 2. Click en el icono de instalar en la barra de URL
 3. Se abre como ventana standalone — un widget sin barra del browser
 
-Muestra los mismos datos que el ESP32 mas un **historico**: grafico de tendencia de las 3 metricas (ventanas 5H / 24H / 7D) y cards con pico, promedio, "en rojo" y proyeccion (5h y semana). El layout se adapta: fila en pantalla ancha, columna en angosta. Si el proxy se cae o expira la sesion, muestra un banner de estado.
+Es una **consola unica** estilo hardware que muestra:
+
+- **Medidores** 5 horas / 7 dias / extra con barras segmentadas tipo VU meter y tiempo para el reset
+- **Tendencia** de las 3 metricas (ventanas 5H / 24H / 7D) con umbral de aviso y proyeccion ("limite en Xh" u "OK")
+- **Estado de los servicios de Claude** (claude.ai / Claude Code / API, via status.claude.com) e incidentes activos
+- **Resumen**: pico, promedio y % del tiempo "en rojo"
+- **LEDs virtuales en el bisel** que replican la tira fisica del ESP32 (5H/7D = proyeccion, SYS = salud del proxy)
+
+Extras: **tema claro/oscuro** y **modo MINI** (widget compacto solo-barras), ambos persistentes; **configuracion embebida** (boton CONFIG, mismo login que `config.html`). Si el proxy se cae o expira la sesion, muestra un banner de estado.
+
+<p align="center">
+  <img src="docs/pwa-light.png" alt="Tema claro" width="440">
+  <img src="docs/pwa-mini.png" alt="Modo MINI" width="250">
+</p>
 
 ### ESP32 (Arduino IDE)
 
@@ -169,6 +188,7 @@ Muestra los mismos datos que el ESP32 mas un **historico**: grafico de tendencia
 | 7 DIAS | Uso en la ventana de 7 dias + tiempo para reset |
 | EXTRA USAGE | Creditos gastados / limite mensual (en USD) |
 | TENDENCIA | Pantalla con mini-grafico de las ultimas 5h + % actual + proyeccion ("Limite en Xh" u "OK") |
+| ESTADO (PWA) | Servicios de Claude: claude.ai / Claude Code / API, desde status.claude.com |
 | Plan | Tipo de suscripcion (Max 5x, Pro, etc.) |
 | Upd | Ultima actualizacion exitosa (cambia a rojo si falla) |
 | Tira LED | 3 LEDs con fade suave: 5h y 7d = proyeccion (verde/ambar/rojo), extra = salud del proxy (frescos/viejos/caido) |
@@ -187,7 +207,7 @@ La configuracion esta dividida en dos lugares:
 - Password de admin de esta pagina
 - Resetear WiFi
 
-**Comportamiento — en la PWA** (`http://<IP-del-proxy>:3456/config.html`, login propio):
+**Comportamiento — en la PWA** (boton **CONFIG** del dashboard, login propio; tambien disponible standalone en `/config.html`):
 - Intervalo de refresco, brillo LCD/LEDs, invertir pantalla, zona horaria
 - Atenuacion nocturna (rango horario + brillo)
 - Alertas: on/off, umbrales de aviso/critico, GPIO del buzzer
